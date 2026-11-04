@@ -1,10 +1,10 @@
 # Webuzo Clean Nginx
 
-WordPress plugin and a local Linux service for clearing a Webuzo hosting account's Nginx cache without storing a hosting API key in WordPress.
+Webuzo administrator plugin, companion WordPress plugin and local Linux service for clearing a hosting account's Nginx cache without storing a hosting API key in WordPress.
 
 By **Byron Iniotakis**. Licensed under GPL-2.0-or-later.
 
-> **Review candidate:** privileged service startup, systemd sandbox behavior, production PHP-FPM connectivity and isolation between two real hosting accounts still require deployment acceptance testing. This is not an independently audited security product.
+> **Lab-tested release candidate:** native installation/removal, real PHP-FPM connectivity, two-account isolation and focused adversarial checks passed in an isolated Ubuntu/Webuzo lab. This is not an independent penetration test or a guarantee of security on every host. See [test scope and limitations](docs/SECURITY-REVIEW.md).
 
 ## How it works
 
@@ -25,21 +25,24 @@ The plugin alone cannot bypass filesystem permissions on a server where the prov
 
 ## Installation
 
-Read **[the administrator installation and removal guide](docs/INSTALLATION.md)** before any privileged operation. The installer prints a plan by default; `--apply` is a separate explicit step.
-
-After the service is installed and the account enrolled:
+Read **[the administrator installation and removal guide](docs/INSTALLATION.md)** before activation. The native Webuzo plugin installs only its own service/code/registry; it does not patch Webuzo, Nginx or PHP configuration or restart those services. Its lifecycle uses the [official Webuzo plugin interface](https://www.webuzo.com/docs/developers/plugins/).
 
 1. Build the packages with `python scripts/build.py`.
-2. Upload the WordPress ZIP from `dist/`, activate it and open **Tools → Webuzo Site Cache**.
-3. Select **Local cache service**, save and **Test connection**.
-4. Optionally preview the cache. Wait 10 seconds between previews or purges.
-5. Use **Nginx cache → Clear Cache** in the toolbar, or the settings-page button.
+2. In **Webuzo Admin → Plugins → Installed Plugins → Add New**, upload `webuzo-clean-nginx-0.4.0-public-review.zip` and activate it. Open **Nginx Cache** to check installation status.
+3. Upload `webuzo-site-cache-0.4.0-public-review.zip` to WordPress, activate it and open **Tools → Webuzo Site Cache**.
+4. Select **Local cache service**, save and **Test connection**.
+5. Optionally preview the cache. Wait 10 seconds between previews or purges.
+6. Use **Clear Cache → Clear Cache** in the toolbar, or the settings-page button.
+
+Activation enrolls existing eligible Unix accounts that have native Nginx cache directories. After adding accounts or enabling their cache, deactivate/reactivate the Webuzo plugin to rebuild enrollment. Deactivation removes the installed broker, unit and registry; cache data is preserved. The plugin directory, installation log and small status/lock files remain. A manual plan-first installer is also available in the separate service bundle.
 
 WordPress actions require `manage_options`, POST and a nonce. The scope warning remains visible; there is no purge confirmation checkbox. Manual purges only; no multisite support or automatic purging.
 
 ## Security boundaries and limits
 
 The broker is root-owned and runs with a restricted systemd unit. The socket accepts local connections, but Linux UID credentials and explicit account enrollment determine authorization. No API key or shared secret is needed in local mode. The broker rejects root and unenrolled callers and checks the account name and primary GID against passwd on each request.
+
+The privileged Webuzo panel and its system identity are part of the trusted host boundary. Native `/usr/local/webuzo` group-write access is accepted only for a system `webuzo` group containing no ordinary tenant. The broker permits the native system `webuzo` owner of `/var/webuzo-data`; other cache-base ancestors must be root owned and not group/world writable. Hosting tenants must never have membership in the privileged panel group.
 
 Limits include one active scan per account, a 10-second cooldown, 8 workers, 512-byte requests, a 2-second total request-read deadline, and 100,000 visited entries / 15 seconds per scan. The unit limits CPU, memory, tasks, address families, capabilities and filesystem access.
 
@@ -62,12 +65,13 @@ python3 -I -B tests/service-nginx-integration.py
 
 Service tests require Linux and a non-root test user with UID ≥1000. Integration also needs Nginx and PHP on PATH, or `NGINX_BINARY` and `PHP_BINARY` set to executable paths. It creates disposable fixtures and loopback-only listeners; it does not invoke the production service entry point or read live cache/configuration.
 
-The test suites cover 39 WordPress/API checks, 8 local-client checks, 20 Linux broker tests and 18 real Nginx/PHP/socket integration assertions. The second cache account in integration is a directory fixture, not a second real connecting UID. The PHP client's production root-owned-socket check uses stubs; the integration test uses a test socket harness. Real privileged startup, sandbox execution, PHP-FPM access and two distinct real caller UIDs remain acceptance checks.
+The portable suites cover 39 WordPress/API checks, 8 local-client checks, 20 Linux broker tests and 18 real Nginx/PHP/socket integration assertions. Their integration fixture uses one connecting UID. Separate deployment acceptance on the native lab service exercised two real hosting UIDs, real WordPress admin HTTP requests and PHP-FPM, lifecycle removal/reactivation and filesystem/protocol attacks. Private deployment harnesses, credentials and environment details are intentionally excluded; the public report describes their scope without identifying infrastructure.
 
 ## Repository contents
 
-- `webuzo-site-cache/`: WordPress plugin, version 0.3.0.
-- `server/`: broker, version 0.1.0, plan-first installer and systemd unit.
+- `webuzo-clean-nginx/`: native Webuzo administrator plugin, version 0.4.0.
+- `webuzo-site-cache/`: WordPress plugin, version 0.4.0.
+- `server/`: broker, version 0.2.0, native lifecycle, plan-first installer and systemd unit.
 - `docs/`: generic administrator instructions.
 - `tests/`: isolated contracts and Linux integration tests.
 - `scripts/build.py`: creates packages from an explicit source allowlist.

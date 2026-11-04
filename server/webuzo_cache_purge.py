@@ -17,7 +17,7 @@ import threading
 import time
 import zlib
 
-VERSION = '0.1.0'
+VERSION = '0.2.0'
 CONFIG = '/etc/webuzo-cache-purge/accounts.json'
 CACHE_BASE = '/var/webuzo-data/nginx_proxy_cache'
 SOCKET = '/run/webuzo-cache-purge/control.sock'
@@ -42,13 +42,24 @@ def open_tree(path, trusted=False):
     if not path.startswith('/') or any(p in ('.', '..') for p in path.split('/')):
         raise Rejected('unsafe_path', 'Invalid fixed server path.')
     fd = os.open('/', DIR_FLAGS)
+    current = ''
     try:
         for part in filter(None, path.split('/')):
+            current += '/' + part
             next_fd = os.open(part, DIR_FLAGS, dir_fd=fd)
             os.close(fd)
             fd = next_fd
             info = os.fstat(fd)
-            if trusted and (info.st_uid != 0 or info.st_mode & 0o022):
+            owner_ok = info.st_uid == 0
+            # Native Webuzo owns this one ancestor. Its service identity already
+            # controls the hosting panel/root helper; ordinary tenants are excluded.
+            if trusted and current == '/var/webuzo-data':
+                try:
+                    webuzo = pwd.getpwnam('webuzo')
+                    owner_ok = owner_ok or (0 < webuzo.pw_uid < 1000 and info.st_uid == webuzo.pw_uid)
+                except KeyError:
+                    pass
+            if trusted and (not owner_ok or info.st_mode & 0o022):
                 raise Rejected('unsafe_path', 'Server directory ownership or permissions are unsafe.')
         return fd
     except BaseException:

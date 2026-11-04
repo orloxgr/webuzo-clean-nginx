@@ -89,7 +89,7 @@ def main():
         if str(uid) in accounts:
             raise SystemExit('Two account names share a UID; enroll only after resolving that ambiguity.')
         accounts[str(uid)] = entry
-    if not accounts:
+    if not accounts and not args.all_webuzo_accounts:
         raise SystemExit('No eligible cache accounts were selected.')
     config = json.dumps({'version': 1, 'accounts': accounts}, indent=2).encode() + b'\n'
     plan = {'apply': args.apply, 'destinations': DESTINATIONS, 'modes': {'code': '0644 root:root', 'accounts': '0600 root:root', 'unit': '0644 root:root'},

@@ -1,0 +1,9 @@
+{
+  "name": "Webuzo Clean Nginx",
+  "slug": "webuzo-clean-nginx",
+  "version": "0.4.0",
+  "author": "Byron Iniotakis",
+  "requires": "4.0.0",
+  "compatibility": [],
+  "homepage": "https://github.com/orloxgr/webuzo-clean-nginx"
+}

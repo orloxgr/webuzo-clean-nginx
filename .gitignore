@@ -10,6 +10,7 @@
 !/scripts/
 !/.github/
 !/webuzo-site-cache/
+!/webuzo-clean-nginx/
 __pycache__/
 *.py[cod]
 .env

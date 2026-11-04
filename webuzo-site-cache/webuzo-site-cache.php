@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Webuzo Site Cache
  * Description: Clear account Nginx cache through a local UID-scoped service, with optional Webuzo API compatibility.
- * Version: 0.3.0
+ * Version: 0.4.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Byron Iniotakis
@@ -30,7 +30,7 @@ final class Plugin {
 
     public static function bar($bar) {
         if (current_user_can('manage_options') && !is_multisite()) {
-            $bar->add_node(['id' => self::SLUG, 'title' => 'Nginx cache', 'href' => admin_url('tools.php?page=' . self::SLUG)]);
+            $bar->add_node(['id' => self::SLUG, 'title' => 'Clear Cache', 'href' => admin_url('tools.php?page=' . self::SLUG)]);
             $form = '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="margin:0">'
                 . '<input type="hidden" name="action" value="webuzo_site_cache">'
                 . '<input type="hidden" name="operation" value="purge">'
@@ -93,7 +93,7 @@ final class Plugin {
         echo '<h2>Clear account cache</h2>';
         self::start_form('purge');
         submit_button('Clear Nginx cache for this account', 'primary');
-        echo '</form><p>Version 0.3.0 · Manual account-wide clearing. No automatic purge or change to whether caching is enabled.</p></div>';
+        echo '</form><p>Version 0.4.0 · Manual account-wide clearing. No automatic purge or change to whether caching is enabled.</p></div>';
     }
 
     private static function posted($name) {

@@ -1,6 +1,22 @@
 # Administrator installation and removal
 
-This review candidate needs acceptance testing before production use. Installation requires the hosting administrator; WordPress users do not need SSH or root after their account is enrolled.
+This candidate passed deployment acceptance and focused adversarial checks in an isolated lab. Each different host still needs its own acceptance checks. Installation requires the hosting administrator; WordPress users do not need SSH or root after their account is enrolled.
+
+## Native Webuzo plugin installation
+
+Build using `python scripts/build.py`. Review the source and verify package checksums before uploading code that will run with hosting administrator privileges. In **Webuzo Admin → Plugins → Installed Plugins → Add New**, upload `webuzo-clean-nginx-0.4.0-public-review.zip`, then activate it. No SSH command is needed for this installation method. The native root helper invokes a fixed lifecycle command with no request-supplied values.
+
+Activation installs the broker, registry and unit listed below, enables/starts only `webuzo-cache-purge.service`, and enrolls all existing eligible Unix accounts with native cache directories. It does not enable Nginx caching itself. Check **Nginx Cache** in the Webuzo administrator menu, then verify from WordPress. Socket presence alone is not a health check. There is no privileged end-user route or HTTP purge endpoint.
+
+The plugin requires existing Python 3 and systemd tools; it never installs system packages. Webuzo installs its bundle under `/usr/local/webuzo/plugins/webuzo-clean-nginx/`. The lifecycle validates bundle ownership and permissions before importing its installer. The native Webuzo system group may write `/usr/local/webuzo` only if it is a system group with no members having UID ≥1000. The panel service identity is trusted; the plugin cannot defend a server whose privileged Webuzo installation is compromised.
+
+The lifecycle also creates `/var/lib/webuzo-cache-purge/` (root 0755), a root-only lifecycle lock, a root-owned 0644 summary `status.json` and `/var/log/webuzo-cache-purge-install.log` (root 0600 when created). The summary contains state/account count only. Concurrent lifecycle requests serialize on the lock. Read installation failures in the root-only log; service activity is in the system journal. A failed activation may remain marked active by Webuzo: the status page and WordPress connection test must confirm readiness.
+
+For new accounts, deleted/recreated identities or newly enabled cache directories, deactivate/reactivate to rebuild the entire enrollment snapshot. For upgrades, deactivate, upload the reviewed replacement ZIP and activate. There is no automatic enrollment hook or background update download.
+
+To remove: deactivate from Webuzo's native plugin list. This stops/disables the broker before removing its three installed files. It never clears cache, removes websites or changes other services. Own empty directories, status/lock files, installation log and the uploaded plugin bundle remain for diagnosis/reactivation. Remove only these exact leftovers if no longer needed. Never delete the Webuzo plugins directory or the cache base.
+
+The remaining command-line procedure is an alternative for administrators who prefer a reviewed plan before applying. Do not maintain a separate manual deployment alongside the native plugin: both manage the same unit/registry.
 
 ## Review the service boundary
 
@@ -71,7 +87,7 @@ For selected accounts, repeat `--account NAME`. After a successful pilot, `--all
 4. Arrange an authorized account-wide pilot purge. Confirm a previously cached anonymous page goes HIT → MISS, then returns to HIT. Account cache loss can temporarily increase backend load.
 5. Use two distinct real hosting UIDs to test isolation, and an unenrolled UID to check rejection. Two domains sharing one UID do not prove account isolation.
 
-Automated integration uses disposable account directories under one test UID. It does not establish the privileged production boundary or isolation between two real callers. The broker has not had an independent security audit.
+Portable automated integration uses disposable account directories under one test UID. Separate native deployment acceptance in an isolated lab verified two real callers, PHP-FPM, lifecycle removal and the privileged service sandbox. Review [the exact test scope](SECURITY-REVIEW.md); this does not replace acceptance on your host or an independent security audit.
 
 Limits include 100,000 entries or 15 seconds per scan, one scan per UID, 10-second cooldown, 8 workers and 512-byte requests with a 2-second read deadline. Incomplete scans are reported. Repeating scans over very large caches might revisit the same unsupported prefix. A compromised enrolled tenant can repeatedly purge its own account within these limits; no absolute DoS guarantee is offered.
 
