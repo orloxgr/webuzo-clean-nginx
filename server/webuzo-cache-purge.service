@@ -1,0 +1,39 @@
+[Unit]
+Description=Webuzo cache purge broker (Unix UID scoped)
+After=local-fs.target
+RequiresMountsFor=/var/webuzo-data/nginx_proxy_cache
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/usr/bin/python3 -I -B /usr/local/lib/webuzo-cache-purge/webuzo_cache_purge.py
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=20
+RuntimeDirectory=webuzo-cache-purge
+RuntimeDirectoryMode=0755
+UMask=0077
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/webuzo-data/nginx_proxy_cache /run/webuzo-cache-purge
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_UNIX
+RestrictNamespaces=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+CapabilityBoundingSet=CAP_DAC_OVERRIDE CAP_DAC_READ_SEARCH
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+TasksMax=32
+MemoryMax=128M
+CPUQuota=25%
+
+[Install]
+WantedBy=multi-user.target

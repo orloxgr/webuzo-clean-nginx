@@ -1,0 +1,26 @@
+# Public source allowlist. Local deployment notes, reports and old packages stay private.
+/*
+!/.gitignore
+!/.gitattributes
+!/README.md
+!/LICENSE
+!/docs/
+!/server/
+!/tests/
+!/scripts/
+!/.github/
+!/webuzo-site-cache/
+__pycache__/
+*.py[cod]
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+*.log
+accounts.json
+/tests/engine-runner.php
+/tests/fpm-check.py
+/tests/nginx-integration.py
+/webuzo-site-cache/includes/class-cache.php
