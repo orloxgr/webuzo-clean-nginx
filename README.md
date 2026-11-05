@@ -4,6 +4,8 @@ Version **0.5.3**, review candidate.
 
 A Webuzo plugin and companion WordPress plugin that let WordPress administrators clear their hosting account's Nginx cache from the WordPress dashboard or toolbar.
 
+This project is an independent third-party integration. It is not affiliated with, endorsed, sponsored, or supported by Webuzo or Softaculous. The Webuzo name is used only to describe compatibility with the hosting platform.
+
 **Clearing cache affects every website in the same hosting account.** This version clears account-wide cache; it does not offer per-site or per-URL purging.
 
 ## Downloads

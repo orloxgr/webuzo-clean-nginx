@@ -13,6 +13,8 @@ Clear hosting-account Nginx cache through Webuzo's native backend.
 == Description ==
 By Byron Iniotakis
 
+This is an independent third-party integration. It is not affiliated with, endorsed, sponsored, or supported by Webuzo or Softaculous. The Webuzo name is used only to describe compatibility with the hosting platform.
+
 The hosting administrator installs the companion Webuzo Clean Nginx plugin. It provisions a separate signing credential per eligible hosting account, outside website directories. WordPress signs a request to the existing local panel; Webuzo performs its native cache clear. No separate purge daemon, panel password or general hosting API key is needed.
 
 This plugin clears the Nginx cache for all websites in this hosting account. Clear Cache > Clear Cache and Settings appear in the toolbar. Actions require administrator capability, POST and a nonce. Wait 2 seconds between requests and 10 seconds between clears. No automatic purge, filesystem preview, confirmation checkbox or multisite support.
