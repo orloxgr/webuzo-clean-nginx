@@ -21,8 +21,6 @@ This plugin clears the Nginx cache for all websites in this hosting account. Cli
 
 Single-site WordPress 6.0+, PHP 7.4+ with POSIX, HMAC hashing and a working WordPress HTTP transport. The companion panel plugin requires a supported native Webuzo backend, loopback port 2002, Python 3, working system cron, GNU timeout and separate hosting UIDs/private groups. Customers need no root or SSH after installation by their provider.
 
-This review candidate has developer-run protocol and native deployment checks. It is not an independent penetration test. A completed native command is not an independently verified cache deletion count. Revalidate actual cache behavior after Webuzo upgrades.
-
 == Local Webuzo connection and data ==
 This plugin requires the hosting provider to install and activate the companion Webuzo Clean Nginx plugin on the same server. It does not create a Webuzo panel account or require a panel login, panel password or general API key.
 
