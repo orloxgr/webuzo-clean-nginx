@@ -45,8 +45,8 @@ The PHP process must run under its account UID and be able to read its provision
 
 1. Deactivate the WordPress development copy first. Remove that WordPress plugin through its Plugins screen if replacing a differently named folder.
 2. In Webuzo Admin > Plugins, **deactivate the old Webuzo plugin before deleting its uploaded bundle**. This allows its existing removal hook to run. For the old service-based candidate, deactivation stops/disables `webuzo-cache-purge.service` and removes its known installed service/code/registry files. For the native bridge candidate, deactivation removes its enrollment cron and revokes its account credentials.
-3. Upload `webuzo-clean-nginx-0.5.6-public-review.zip`, activate it, and check Nginx Cache for `ready`, eligible account count and the ten-minute enrollment schedule.
-4. Install and activate `clear-nginx-for-webuzo-0.5.6-public-review.zip` in WordPress. Reload the dashboard to get forms using the new action/nonce identifiers, then test connection and clear cache.
+3. Upload `webuzo-clean-nginx-0.5.7-public-review.zip`, activate it, and check Nginx Cache for `ready`, eligible account count and the ten-minute enrollment schedule.
+4. Install and activate `clear-nginx-for-webuzo-0.5.7-public-review.zip` in WordPress. Reload the dashboard to get forms using the new action/nonce identifiers, then test connection and clear cache.
 
 If the separate old purge service was installed without a Webuzo plugin, or its known unit remains, activating the new Webuzo plugin also checks for `/etc/systemd/system/webuzo-cache-purge.service`. When present, it validates the three known old installed files as trusted root-owned regular files, runs `systemctl disable --now webuzo-cache-purge.service`, removes only `/usr/local/lib/webuzo-cache-purge/webuzo_cache_purge.py`, `/etc/webuzo-cache-purge/accounts.json` and that unit file when present, then runs `systemctl daemon-reload`. Unsafe files stop installation rather than broadening cleanup. It does not search for or remove arbitrary services, websites or cache contents. Other old empty directories/logs/socket leftovers are not recursively deleted.
 

@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /** WordPress administrator UI and authorized manual actions. */
 final class Plugin {
 
-	const VERSION = '0.5.6';
+	const VERSION = '0.5.7';
 	const SLUG    = 'clear-nginx-for-webuzo';
 
 	/**
@@ -32,6 +32,7 @@ final class Plugin {
 	public static function boot( $plugin_file ) {
 		self::$plugin_file = $plugin_file;
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
+		add_action( 'admin_notices', array( __CLASS__, 'notices' ) );
 		add_action( 'admin_bar_menu', array( __CLASS__, 'bar' ), 100 );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'styles' ) );
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'styles' ) );
@@ -59,24 +60,17 @@ final class Plugin {
 		if ( ! current_user_can( 'manage_options' ) || is_multisite() ) {
 			return;
 		}
-		$bar->add_node(
-			array(
-				'id'    => self::SLUG,
-				'title' => esc_html__( 'Clear Cache', 'clear-nginx-for-webuzo' ),
-				'href'  => admin_url( 'tools.php?page=' . self::SLUG ),
-			)
-		);
 		$form = '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="clear-nginx-cache-form">'
 			. '<input type="hidden" name="action" value="clear_nginx_for_webuzo">'
 			. '<input type="hidden" name="operation" value="purge">'
 			. '<input type="hidden" name="_wpnonce" value="' . esc_attr( wp_create_nonce( 'clear_nginx_for_webuzo_purge' ) ) . '">'
+			. wp_referer_field( false )
 			. '<button type="submit" class="clear-nginx-cache-button" title="' . esc_attr__( 'Clears Nginx cache for all websites in this hosting account.', 'clear-nginx-for-webuzo' ) . '">'
 			. esc_html__( 'Clear Cache', 'clear-nginx-for-webuzo' ) . '</button></form>';
 		$bar->add_node(
 			array(
-				'id'     => self::SLUG . '-purge',
-				'parent' => self::SLUG,
-				'title'  => $form,
+				'id'    => self::SLUG,
+				'title' => $form,
 			)
 		);
 		$bar->add_node(
@@ -100,6 +94,19 @@ final class Plugin {
 		wp_nonce_field( 'clear_nginx_for_webuzo_' . $operation );
 	}
 
+	/** Show the current administrator's cache result after returning to an admin page. */
+	public static function notices() {
+		if ( ! current_user_can( 'manage_options' ) || is_multisite() ) {
+			return;
+		}
+		$notice = get_transient( 'clear_nginx_for_webuzo_notice_' . get_current_user_id() );
+		if ( is_array( $notice ) && isset( $notice['type'], $notice['text'] ) ) {
+			delete_transient( 'clear_nginx_for_webuzo_notice_' . get_current_user_id() );
+			$type = in_array( $notice['type'], array( 'success', 'error', 'warning' ), true ) ? $notice['type'] : 'error';
+			echo '<div class="notice notice-' . esc_attr( $type ) . '"><p>' . esc_html( $notice['text'] ) . '</p></div>';
+		}
+	}
+
 	/** Render the account cache tools page. */
 	public static function page() {
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -110,13 +117,8 @@ final class Plugin {
 			echo '<p>' . esc_html__( 'This release supports single-site WordPress only.', 'clear-nginx-for-webuzo' ) . '</p></div>';
 			return;
 		}
-		$notice = get_transient( 'clear_nginx_for_webuzo_notice_' . get_current_user_id() );
-		if ( is_array( $notice ) && isset( $notice['type'], $notice['text'] ) ) {
-			delete_transient( 'clear_nginx_for_webuzo_notice_' . get_current_user_id() );
-			$type = in_array( $notice['type'], array( 'success', 'error', 'warning' ), true ) ? $notice['type'] : 'error';
-			echo '<div class="notice notice-' . esc_attr( $type ) . '"><p>' . esc_html( $notice['text'] ) . '</p></div>';
-		}
-		echo '<p>' . esc_html__( 'The Native Webuzo bridge uses the hosting provider’s existing panel to clear cache. The companion Webuzo plugin provisions a separate credential for each hosting account. No panel password or general API key is needed.', 'clear-nginx-for-webuzo' ) . '</p>';
+		self::notices();
+		echo '<p>' . esc_html__( 'Clear cached pages to help visitors see your latest changes.', 'clear-nginx-for-webuzo' ) . '</p>';
 		echo '<div class="notice notice-warning inline"><p><strong>' . esc_html__( 'This plugin clears the Nginx cache for all websites in this hosting account.', 'clear-nginx-for-webuzo' ) . '</strong></p></div>';
 		echo '<h2>' . esc_html__( 'Check connection', 'clear-nginx-for-webuzo' ) . '</h2><p>' . esc_html__( 'Checks which hosting account will be used. This action does not clear cache.', 'clear-nginx-for-webuzo' ) . '</p>';
 		self::start_form( 'connection' );
@@ -125,8 +127,7 @@ final class Plugin {
 		self::start_form( 'purge' );
 		submit_button( __( 'Clear Nginx cache for this account', 'clear-nginx-for-webuzo' ), 'primary' );
 		echo '</form><p>' . esc_html__( 'Wait 2 seconds between connection checks and 10 seconds between cache clears.', 'clear-nginx-for-webuzo' ) . '</p>';
-		echo '<p>' . esc_html__( 'New accounts become available after the provider’s next enrollment sync, scheduled every 10 minutes.', 'clear-nginx-for-webuzo' ) . '</p>';
-		echo '<p>' . esc_html__( 'Manual account-wide clearing through Webuzo. No automatic purge or change to whether caching is enabled.', 'clear-nginx-for-webuzo' ) . '</p></div>';
+		echo '</div>';
 	}
 
 	/** Authorize and process a connection check or manual cache clear. */
@@ -144,6 +145,9 @@ final class Plugin {
 			wp_die( esc_html__( 'Unknown operation.', 'clear-nginx-for-webuzo' ), '', array( 'response' => 400 ) );
 		}
 		$operation = sanitize_text_field( wp_unslash( $_POST['operation'] ) );
+		if ( isset( $_REQUEST['_wp_http_referer'] ) && ! is_string( $_REQUEST['_wp_http_referer'] ) ) {
+			wp_die( esc_html__( 'Use the cache management form.', 'clear-nginx-for-webuzo' ), '', array( 'response' => 400 ) );
+		}
 		check_admin_referer( 'clear_nginx_for_webuzo_' . $operation );
 		try {
 			if ( is_multisite() ) {
@@ -183,7 +187,8 @@ final class Plugin {
 			),
 			120
 		);
-		wp_safe_redirect( admin_url( 'tools.php?page=' . self::SLUG ) );
+		$referer = wp_get_referer();
+		wp_safe_redirect( $referer ? $referer : admin_url( 'tools.php?page=' . self::SLUG ) );
 		exit;
 	}
 }

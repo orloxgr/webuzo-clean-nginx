@@ -1,4 +1,4 @@
-# WordPress quality checks for 0.5.6
+# WordPress quality checks for 0.5.7
 
 Clear Nginx for Webuzo uses namespace/package `ClearNginxForWebuzo`, text domain `clear-nginx-for-webuzo`, and prefix `clear_nginx_for_webuzo_` for actions, nonces, notices and error codes. There are no legacy namespace aliases, old action handlers, settings migration or notice migration. The bootstrap rejects duplicate loading of its own implementation.
 
@@ -7,6 +7,12 @@ Expected client failures return `WP_Error` and are checked with `is_wp_error()` 
 Operation input must exactly match an allowed original string before `sanitize_text_field()` is applied. HTML, whitespace, control characters, missing fields and non-string input are rejected rather than normalized into an allowed action. WordPress authorization requires `manage_options`, POST and an operation-specific nonce.
 
 Credential contents use `WP_Filesystem_Direct::get_contents()`, without changing the global filesystem object or `FS_METHOD`, selecting FTP/SSH, or requesting credentials. Numeric owner, mode, regular-file type, hard-link count, canonical parent and size checks remain. Read failures and oversized content return `WP_Error`.
+
+## Version 0.5.7 toolbar and page changes
+
+The primary Clear Cache toolbar item is now the purge POST form, with Settings as a separate submenu link. A WordPress referer field and safe redirect return the user to the originating page; malformed return fields are rejected before nonce processing and external referers are rejected by WordPress redirect validation. Result notices also render on other administrator pages. Hosting enrollment/backend implementation paragraphs are removed from the tools page; the introduction now reads: "Clear cached pages to help visitors see your latest changes." The handler suite has 54 assertions; the historical results below describe the 0.5.6 baseline.
+
+The toolbar changes passed 26 live WordPress HTTP assertions: rendered primary POST control, separate Settings link, Dashboard/frontend return paths, actual account cache MISS after purge, other-account cache HIT preservation, success notice, nonce/method checks, malformed return field rejection and external-URL fallback. Both full static and runtime Plugin Check scans passed on separate copies of the 0.5.7 WordPress package with all annotation comments removed. The frontend fixture used a unique query string to reach an uncached authenticated page; this does not validate the hosting provider's general cookie/cache-bypass configuration. Earlier release assets remain unchanged; 0.5.7 includes both installable packages.
 
 ## One explicit coding-standard exception
 
@@ -38,7 +44,7 @@ wp --require=wp-content/plugins/plugin-check/cli.php plugin check clear-nginx-fo
 
 The second command includes runtime checks. Neither excludes a check.
 
-## Verification scope
+## Version 0.5.6 baseline verification scope
 
 - WordPress Coding Standards 3.4.1 / PHP_CodeSniffer 3.13.6 with PHPCompatibilityWP 2.1.8: pass with the single explicit annotation above; one warning without annotations.
 - Plugin Check 2.1.0: full static and runtime checks pass, including the updater check. No Update URI or custom updater is included.

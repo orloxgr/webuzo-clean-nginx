@@ -1,4 +1,4 @@
-# Version 0.5.6 review scope
+# Version 0.5.7 review scope
 
 This is a developer-run review candidate, not an independent penetration test or a claim that a privileged plugin cannot contain vulnerabilities.
 
@@ -30,7 +30,7 @@ Portable suites:
 | --- | ---: | --- |
 | Native protocol | 29 | Schema, HMAC binding, account-ID substitution, malformed/extra fields, expiry, duplicate keys and registry validation |
 | WordPress native client | 41 | Fixed HTTP API destination, redirects disabled, secret not sent, response HMAC/nonce/scope validation, truncation, ambiguous headers, bounded size and timeout |
-| WordPress handler/UI | 47 | Capability, method, nonce, unsupported actions, multisite, escaping, toolbar, duplicate-installation rejection, isolated notice keys, scoped styles and matching action/nonce prefixes |
+| WordPress handler/UI | 54 | Capability, method, nonce, unsupported actions, multisite, escaping, toolbar, duplicate-installation rejection, isolated notice keys, scoped styles and matching action/nonce prefixes |
 | Isolated lifecycle/cron | 17 | Ten-minute schedule, new/stale enrollment, identity changes, key/nonce preservation and disabled-job behavior |
 
 Native deployment acceptance uses an isolated Ubuntu/Webuzo environment and two real hosting accounts. It exercises account-separated credential access, signed requests through the actual panel, forged signatures, account overrides, replay/expiry, rate limits and unsupported operations. Its cache attack fixtures include symlinks to root-owned files outside cache and to the other account's cache. Outside data and the other account's cached content/inodes/owners/modes are compared after a native purge.
@@ -61,3 +61,5 @@ Version 0.5.4 renames only the WordPress public identity and adds a duplicate-in
 Version 0.5.5 removes the WordPress Update URI header and redundant translation loader for directory submission. Native bridge and lifecycle code are unchanged; the existing 0.5.4 server companion remains compatible.
 
 Version 0.5.6 uses namespace `ClearNginxForWebuzo` and prefix `clear_nginx_for_webuzo_`. Legacy WordPress setting migration and compatibility identifiers are removed. The current public client/handler suites contain 41 and 47 assertions; versioned deployment counts above describe earlier candidates. One explicit native metadata-check annotation remains; see the WordPress quality report.
+
+Version 0.5.7 changes the primary toolbar item to the authorized purge POST and returns to the originating page through WordPress referer and safe-redirect APIs. Non-string return fields are rejected before nonce processing. Result notices render on administrator pages. The tools page uses a short user-facing introduction. Twenty-six additional live HTTP checks verify Dashboard/frontend actions, safe return paths and other-account cache preservation; the privileged bridge and enrollment code are unchanged.

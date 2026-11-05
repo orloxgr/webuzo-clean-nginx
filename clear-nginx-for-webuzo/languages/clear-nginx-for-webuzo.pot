@@ -2,22 +2,22 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Clear Nginx for Webuzo 0.5.6\n"
+"Project-Id-Version: Clear Nginx for Webuzo 0.5.7\n"
 "Report-Msgid-Bugs-To: https://github.com/orloxgr/webuzo-clean-nginx/issues\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-05T12:04:33+00:00\n"
+"POT-Creation-Date: 2026-11-05T13:10:06+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: clear-nginx-for-webuzo\n"
 
 #. Plugin Name of the plugin
 #: clear-nginx-for-webuzo.php
-#: includes/class-plugin.php:50
-#: includes/class-plugin.php:108
+#: includes/class-plugin.php:51
+#: includes/class-plugin.php:115
 msgid "Clear Nginx for Webuzo"
 msgstr ""
 
@@ -77,7 +77,7 @@ msgid "The native panel did not confirm this request and its account scope."
 msgstr ""
 
 #: includes/class-native-panel.php:126
-#: includes/class-plugin.php:127
+#: includes/class-plugin.php:129
 msgid "Wait 2 seconds between connection checks and 10 seconds between cache clears."
 msgstr ""
 
@@ -105,83 +105,75 @@ msgstr ""
 msgid "The native panel rejected the cache request."
 msgstr ""
 
-#: includes/class-plugin.php:65
-#: includes/class-plugin.php:74
-msgid "Clear Cache"
-msgstr ""
-
-#: includes/class-plugin.php:73
+#: includes/class-plugin.php:68
 msgid "Clears Nginx cache for all websites in this hosting account."
 msgstr ""
 
-#: includes/class-plugin.php:86
+#: includes/class-plugin.php:69
+msgid "Clear Cache"
+msgstr ""
+
+#: includes/class-plugin.php:80
 msgid "Settings"
 msgstr ""
 
-#: includes/class-plugin.php:110
+#: includes/class-plugin.php:117
 msgid "This release supports single-site WordPress only."
 msgstr ""
 
-#: includes/class-plugin.php:119
-msgid "The Native Webuzo bridge uses the hosting provider’s existing panel to clear cache. The companion Webuzo plugin provisions a separate credential for each hosting account. No panel password or general API key is needed."
+#: includes/class-plugin.php:121
+msgid "Clear cached pages to help visitors see your latest changes."
 msgstr ""
 
-#: includes/class-plugin.php:120
+#: includes/class-plugin.php:122
 msgid "This plugin clears the Nginx cache for all websites in this hosting account."
 msgstr ""
 
-#: includes/class-plugin.php:121
+#: includes/class-plugin.php:123
 msgid "Check connection"
 msgstr ""
 
-#: includes/class-plugin.php:121
+#: includes/class-plugin.php:123
 msgid "Checks which hosting account will be used. This action does not clear cache."
 msgstr ""
 
-#: includes/class-plugin.php:123
+#: includes/class-plugin.php:125
 msgid "Test connection"
 msgstr ""
 
-#: includes/class-plugin.php:124
+#: includes/class-plugin.php:126
 msgid "Clear account cache"
 msgstr ""
 
-#: includes/class-plugin.php:126
+#: includes/class-plugin.php:128
 msgid "Clear Nginx cache for this account"
 msgstr ""
 
-#: includes/class-plugin.php:128
-msgid "New accounts become available after the provider’s next enrollment sync, scheduled every 10 minutes."
-msgstr ""
-
-#: includes/class-plugin.php:129
-msgid "Manual account-wide clearing through Webuzo. No automatic purge or change to whether caching is enabled."
-msgstr ""
-
-#: includes/class-plugin.php:135
+#: includes/class-plugin.php:136
 msgid "You cannot manage this site’s cache."
 msgstr ""
 
-#: includes/class-plugin.php:139
+#: includes/class-plugin.php:140
+#: includes/class-plugin.php:149
 msgid "Use the cache management form."
 msgstr ""
 
-#: includes/class-plugin.php:144
+#: includes/class-plugin.php:145
 msgid "Unknown operation."
 msgstr ""
 
-#: includes/class-plugin.php:150
+#: includes/class-plugin.php:154
 msgid "Multisite is not supported by this release."
 msgstr ""
 
 #. translators: %s: Hosting account username confirmed by the native bridge.
-#: includes/class-plugin.php:162
+#: includes/class-plugin.php:166
 #, php-format
 msgid "Connected to the native Webuzo bridge for hosting account %s. Connection test only; no cache was cleared."
 msgstr ""
 
 #. translators: %s: Hosting account username confirmed by the native bridge.
-#: includes/class-plugin.php:168
+#: includes/class-plugin.php:172
 #, php-format
 msgid "The native Webuzo cache-clear command completed for hosting account %s. This affects every site in that account. New visits rebuild cache."
 msgstr ""

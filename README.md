@@ -1,6 +1,6 @@
 # Webuzo Clean Nginx
 
-Version **0.5.6**, review candidate.
+Version **0.5.7**, review candidate.
 
 A Webuzo plugin and companion WordPress plugin that let WordPress administrators clear their hosting account's Nginx cache from the WordPress dashboard or toolbar.
 
@@ -10,12 +10,12 @@ This project is an independent third-party integration. It is not affiliated wit
 
 ## Downloads
 
-Download the two installable ZIPs from [release v0.5.6](https://github.com/orloxgr/webuzo-clean-nginx/releases/tag/v0.5.6). The release also includes `SHA256SUMS.txt` for checking the downloads.
+Download the two installable ZIPs from [release v0.5.7](https://github.com/orloxgr/webuzo-clean-nginx/releases/tag/v0.5.7). The release also includes `SHA256SUMS.txt` for checking the downloads.
 
 | Package | Install in | Purpose |
 | --- | --- | --- |
-| [Webuzo Clean Nginx](https://github.com/orloxgr/webuzo-clean-nginx/releases/download/v0.5.6/webuzo-clean-nginx-0.5.6-public-review.zip) | Webuzo Admin, once per server | Enroll accounts and handle authenticated cache-clear requests through Webuzo's native backend |
-| [Clear Nginx for Webuzo](https://github.com/orloxgr/webuzo-clean-nginx/releases/download/v0.5.6/clear-nginx-for-webuzo-0.5.6-public-review.zip) | Each WordPress installation that needs a clear-cache button | Test the connection and request a manual account cache clear |
+| [Webuzo Clean Nginx](https://github.com/orloxgr/webuzo-clean-nginx/releases/download/v0.5.7/webuzo-clean-nginx-0.5.7-public-review.zip) | Webuzo Admin, once per server | Enroll accounts and handle authenticated cache-clear requests through Webuzo's native backend |
+| [Clear Nginx for Webuzo](https://github.com/orloxgr/webuzo-clean-nginx/releases/download/v0.5.7/clear-nginx-for-webuzo-0.5.7-public-review.zip) | Each WordPress installation that needs a clear-cache button | Test the connection and request a manual account cache clear |
 
 Use these release assets when installing. GitHub's **Source code** archives contain the repository and are not the individual plugin packages.
 
@@ -27,7 +27,7 @@ The WordPress package uses `clear-nginx-for-webuzo/clear-nginx-for-webuzo.php`, 
 2. Open **Nginx Cache** in Webuzo to check the bridge status, enrolled-account count and last enrollment sync.
 3. Upload and activate the WordPress ZIP in **WordPress → Plugins → Add New → Upload Plugin**.
 4. Open **Tools → Clear Nginx for Webuzo** and click **Test connection**. No panel password, API key or connection settings need to be entered.
-5. Use **Clear Cache → Clear Cache** in the WordPress administrator toolbar, or **Clear Nginx cache for this account** on the tools page. The toolbar dropdown also includes **Settings**.
+5. Click **Clear Cache** directly in the WordPress administrator toolbar, or **Clear Nginx cache for this account** on the tools page. The toolbar submits a nonce-protected POST and returns to the current page; its dropdown contains a separate **Settings** link.
 
 The tools page displays an account-wide warning. Connection tests do not clear cache. Cache clearing is manual; publishing or updating a post does not automatically purge it. New visits rebuild cache after a clear.
 
@@ -35,7 +35,7 @@ WordPress actions require `manage_options`, POST and an operation-specific nonce
 
 See [installation, upgrade and removal](docs/INSTALLATION.md) for permissions, installed files and troubleshooting, and [security review](docs/SECURITY-REVIEW.md) for the tested scope and limitations.
 
-Version 0.5.6 aligns all WordPress identifiers with the plugin name, removes obsolete settings migration, uses `WP_Error` and `WP_Filesystem_Direct`, and sanitizes strictly validated operation input. The native command and ten-minute enrollment cron are unchanged. One documented `@lstat()` coding-standard annotation remains for the metadata security check. See [WordPress quality checks](docs/WORDPRESS-QUALITY.md) for the exact results and exception.
+Version 0.5.7 makes the main toolbar button clear cache directly and return to the current page, keeps Settings separate, and simplifies the tools-page text. The native command and ten-minute enrollment cron are unchanged. One documented `@lstat()` coding-standard annotation remains for the metadata security check. See [WordPress quality checks](docs/WORDPRESS-QUALITY.md) for the exact results and exception.
 
 ## New accounts and scheduled enrollment
 
@@ -93,7 +93,7 @@ php tests/wordpress-contract.php
 python3 -I -B tests/lifecycle-contract.py
 ```
 
-The protocol/client/WordPress stub suites contain 29, 28 and 33 assertions; the isolated lifecycle suite adds 17. They do not clear live cache. Native deployment acceptance also exercises actual WordPress HTTP/PHP-FPM, hosting-account isolation, filesystem attacks, native plugin lifecycle, credential revocation and the ten-minute cron with disposable accounts. See the report for the precise tested scope. These are developer-run checks, not an independent penetration test.
+The protocol/client/WordPress stub suites contain 29, 41 and 54 assertions; the isolated lifecycle suite adds 17. They do not clear live cache. Native deployment acceptance also exercises actual WordPress HTTP/PHP-FPM, hosting-account isolation, filesystem attacks, native plugin lifecycle, credential revocation and the ten-minute cron with disposable accounts. See the report for the precise tested scope. These are developer-run checks, not an independent penetration test.
 
 For WordPress coding standards and PHP compatibility, run `composer install` followed by `composer lint`. Use `composer test:wordpress` for the WordPress handler and HTTP client fixtures. The minimum-version fixture uses WordPress 6.0 / PHP 7.4; the current HTTP/PHP-FPM fixture uses WordPress 7.1.4 / PHP 8.3.
 

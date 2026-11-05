@@ -33,7 +33,9 @@ function home_url($path = '') { return 'https://www.example.test/'; }
 function wp_unslash($value) { return $value; }
 function wp_die($message, $title = '', $args = []) { throw new RuntimeException('HTTP ' . $args['response'] . ': ' . $message); }
 function check_admin_referer($action) { $GLOBALS['nonce_action'] = $action; if (!$GLOBALS['validNonce']) { throw new RuntimeException('HTTP 403: invalid nonce'); } }
-function wp_safe_redirect($url) { throw new RuntimeException('redirect'); }
+function wp_safe_redirect($url) { $GLOBALS['redirect_url'] = $url; throw new RuntimeException('redirect'); }
+function wp_get_referer() { return $GLOBALS['referer'] ?? false; }
+function wp_referer_field($display = true) { $html = '<input type="hidden" name="_wp_http_referer" value="/wp-admin/index.php">'; if ($display) { echo $html; } return $html; }
 function esc_url($value) { return htmlspecialchars($value, ENT_QUOTES); }
 function esc_attr($value) { return htmlspecialchars($value, ENT_QUOTES); }
 function esc_html($value) { return htmlspecialchars($value, ENT_QUOTES); }
@@ -75,6 +77,18 @@ ob_start(); \ClearNginxForWebuzo\Plugin::page(); $error_html = ob_get_clean();
 check(strpos($error_html, esc_html($translated)) !== false && strpos($error_html, '<b>Missing POSIX</b>') === false, 'WP_Error HTML is escaped at display');
 check(strpos($error_html, '&amp;lt;b&amp;gt;') === false, 'WP_Error message is not double escaped');
 unset($GLOBALS['translations'][$source]);
+$referer = 'https://www.example.test/wp-admin/edit.php';
+check(handle() === 'redirect' && $redirect_url === $referer, 'Operation returns to the current page instead of settings');
+$referer = false;
+check(handle() === 'redirect' && strpos($redirect_url, 'tools.php?page=clear-nginx-for-webuzo') !== false, 'Missing safe referer falls back to the tools page');
+$_REQUEST['_wp_http_referer'] = ['malformed'];
+$referer = 'https://www.example.test/wp-admin/edit.php';
+check(strpos(handle(), 'HTTP 400') === 0, 'Malformed return field rejected before nonce and transport');
+unset($_REQUEST['_wp_http_referer']); $referer = false;
+set_transient('clear_nginx_for_webuzo_notice_1', ['type' => 'success', 'text' => 'result on originating page'], 120);
+ob_start(); \ClearNginxForWebuzo\Plugin::notices(); $notice_html = ob_get_clean();
+check(strpos($notice_html, 'result on originating page') !== false && get_transient('clear_nginx_for_webuzo_notice_1') === false, 'Result notice is rendered and consumed on the originating admin page');
+
 set_transient('clear_nginx_for_webuzo_notice_1', ['type' => 'error', 'text' => '<script>test</script>'], 120);
 ob_start(); \ClearNginxForWebuzo\Plugin::page(); $html = ob_get_clean();
 check(strpos($html, '<script>') === false && strpos($html, '&lt;script&gt;') !== false, 'Notices escaped');
@@ -82,6 +96,7 @@ check(strpos($html, 'all websites in this hosting account') !== false, 'Account-
 check(strpos($html, 'confirm_account') === false, 'No purge confirmation checkbox');
 check(strpos($html, 'name="apikey"') === false && strpos($html, 'name="panel"') === false, 'No broad API credential or destination fields');
 check(strpos($html, 'Preview account cache') === false, 'No obsolete filesystem preview');
+check(strpos($html, 'provider’s next enrollment sync') === false && strpos($html, 'Manual account-wide clearing through Webuzo.') === false && strpos($html, 'The Native Webuzo bridge uses') === false, 'Hosting implementation details removed from settings');
 check(strpos($html, 'name="action" value="clear_nginx_for_webuzo"') !== false, 'Tools forms use the matching plugin action');
 check(isset($hooks['admin_post_clear_nginx_for_webuzo']), 'Authenticated handler registered under the matching plugin action');
 set_transient('other_plugin_notice_1', ['type' => 'warning', 'text' => 'foreign-plugin-notice'], 120);
@@ -91,14 +106,16 @@ check(strpos($isolated, 'foreign-plugin-notice') === false && strpos($isolated, 
 check(isset($transients['other_plugin_notice_1'], $transients['clear_nginx_for_webuzo_notice_2']), 'Foreign and other-user notices are preserved');
 $toolbar = new class { public $nodes = []; public function add_node($n) { $this->nodes[$n['id']] = $n; } };
 \ClearNginxForWebuzo\Plugin::bar($toolbar);
-$node = $toolbar->nodes['clear-nginx-for-webuzo-purge'];
-check($node['parent'] === 'clear-nginx-for-webuzo' && strpos($node['title'], '>Clear Cache</button>') !== false, 'Clear Cache dropdown action');
+$node = $toolbar->nodes['clear-nginx-for-webuzo'];
+check(!isset($node['parent']) && !isset($node['href']) && strpos($node['title'], '>Clear Cache</button>') !== false, 'Primary Clear Cache item is the POST button, not a settings link');
+check($toolbar->nodes['clear-nginx-for-webuzo-settings']['parent'] === 'clear-nginx-for-webuzo' && strpos($toolbar->nodes['clear-nginx-for-webuzo-settings']['href'], 'tools.php?page=') !== false, 'Settings remains a separate submenu link');
+check(strpos($node['title'], 'name="_wp_http_referer"') !== false, 'Toolbar includes the current page return field');
 check(strpos($node['title'], 'method="post"') !== false && strpos($node['title'], 'test-toolbar-nonce') !== false && !isset($node['href']), 'Toolbar uses POST and nonce');
 check($toolbar_nonce_action === 'clear_nginx_for_webuzo_purge' && strpos($node['title'], 'name="action" value="clear_nginx_for_webuzo"') !== false, 'Toolbar action and nonce use the matching plugin prefix');
 $styles = []; $toolbar_visible = true;
 \ClearNginxForWebuzo\Plugin::styles();
 check(count($styles) === 1 && $styles[0][1] === 'https://www.example.test/wp-content/plugins/clear-nginx-for-webuzo/assets/admin-bar.css', 'Styles use the main plugin path');
-check($styles[0][2] === ['admin-bar'] && $styles[0][3] === '0.5.6', 'Toolbar styles declare dependency and cache version');
+check($styles[0][2] === ['admin-bar'] && $styles[0][3] === '0.5.7', 'Toolbar styles declare dependency and cache version');
 foreach (['visitor', 'hidden', 'multisite'] as $case) {
     $styles = []; $authorized = $case !== 'visitor'; $toolbar_visible = $case !== 'hidden'; $multisite = $case === 'multisite';
     \ClearNginxForWebuzo\Plugin::styles(); check($styles === [], 'No unnecessary styles: ' . $case);

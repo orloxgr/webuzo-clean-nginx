@@ -4,7 +4,7 @@ Tested up to: 7.1
 Tags: webuzo, nginx, cache, purge
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 0.5.6
+Stable tag: 0.5.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -17,7 +17,7 @@ This is an independent third-party integration. It is not affiliated with, endor
 
 The hosting administrator installs the companion Webuzo Clean Nginx plugin. It provisions a separate signing credential per eligible hosting account, outside website directories. WordPress signs a request to the existing local panel; Webuzo performs its native cache clear. No separate purge daemon, panel password or general hosting API key is needed.
 
-This plugin clears the Nginx cache for all websites in this hosting account. Clear Cache > Clear Cache and Settings appear in the toolbar. Actions require administrator capability, POST and a nonce. Wait 2 seconds between requests and 10 seconds between clears. No automatic purge, filesystem preview, confirmation checkbox or multisite support.
+This plugin clears the Nginx cache for all websites in this hosting account. Click Clear Cache directly in the toolbar to purge and return to the current page; Settings is a separate dropdown link. Actions require administrator capability, POST and a nonce. Wait 2 seconds between requests and 10 seconds between clears. No automatic purge, filesystem preview, confirmation checkbox or multisite support.
 
 Single-site WordPress 6.0+, PHP 7.4+ with POSIX, HMAC hashing and a working WordPress HTTP transport. The companion panel plugin requires a supported native Webuzo backend, loopback port 2002, Python 3, working system cron, GNU timeout and separate hosting UIDs/private groups. Customers need no root or SSH after installation by their provider.
 
@@ -42,6 +42,9 @@ This connection remains on the hosting server. The plugin does not load remote s
 The companion Webuzo plugin synchronizes enrollment automatically every ten minutes. New accounts become eligible when native cache/proxy is enabled. Existing credentials and cooldowns are preserved. Busy/failed runs retry at a later scheduled cycle. Deactivate/reactivate only to rotate all credentials or upgrade. Unsupported/missing credentials fail closed; no API fallback exists.
 
 == Upgrade Notice ==
+= 0.5.7 =
+Clear Cache in the toolbar now purges directly and returns to the current page. Settings remains a separate dropdown link. Simplifies the tools-page introduction. The native cache-clear protocol is unchanged.
+
 = 0.5.6 =
 Uses the ClearNginxForWebuzo namespace and matching identifiers, WP_Error and the WordPress Filesystem API. Deactivate earlier development copies before installation; old action and namespace aliases are not provided.
 
@@ -64,6 +67,9 @@ Adds a root-owned enrollment cron every ten minutes. It never clears cache, has 
 Uses Webuzo's native clear command and account-scoped capabilities instead of a custom purge daemon or general panel API credentials.
 
 == Changelog ==
+= 0.5.7 =
+Makes the main toolbar control a nonce-protected purge POST, returns safely to the originating page and shows results on administrator pages. Keeps Settings separate, simplifies the tools page and removes hosting enrollment/backend details from that page.
+
 = 0.5.6 =
 Aligns namespace, package, actions, nonces, notices and error codes with the plugin name. Removes obsolete settings migration, uses WP_Error and WP_Filesystem_Direct, and sanitizes validated operation input. Retains one documented native metadata-check annotation.
 
