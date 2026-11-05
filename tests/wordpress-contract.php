@@ -69,7 +69,7 @@ check(strpos($node['title'], 'method="post"') !== false && strpos($node['title']
 $styles = []; $toolbar_visible = true;
 \WebuzoSiteCache\Plugin::styles();
 check(count($styles) === 1 && $styles[0][1] === 'https://www.example.test/wp-content/plugins/clear-nginx-for-webuzo/assets/admin-bar.css', 'Styles use the main plugin path');
-check($styles[0][2] === ['admin-bar'] && $styles[0][3] === '0.5.4', 'Toolbar styles declare dependency and cache version');
+check($styles[0][2] === ['admin-bar'] && $styles[0][3] === '0.5.5', 'Toolbar styles declare dependency and cache version');
 foreach (['visitor', 'hidden', 'multisite'] as $case) {
     $styles = []; $authorized = $case !== 'visitor'; $toolbar_visible = $case !== 'hidden'; $multisite = $case === 'multisite';
     \WebuzoSiteCache\Plugin::styles(); check($styles === [], 'No unnecessary styles: ' . $case);

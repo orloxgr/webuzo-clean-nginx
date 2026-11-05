@@ -3,13 +3,12 @@
  * Plugin Name: Clear Nginx for Webuzo
  * Plugin URI: https://github.com/orloxgr/webuzo-clean-nginx
  * Description: Clear account Nginx cache through Webuzo's native backend with a purge-only account credential.
- * Version: 0.5.4
+ * Version: 0.5.5
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Byron Iniotakis
  * License: GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Update URI: https://github.com/orloxgr/webuzo-clean-nginx
  * Text Domain: clear-nginx-for-webuzo
  * Domain Path: /languages
  *

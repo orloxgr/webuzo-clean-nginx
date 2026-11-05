@@ -4,7 +4,7 @@ Tested up to: 7.1
 Tags: webuzo, nginx, cache, purge
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 0.5.4
+Stable tag: 0.5.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -42,6 +42,9 @@ This connection remains on the hosting server. The plugin does not load remote s
 The companion Webuzo plugin synchronizes enrollment automatically every ten minutes. New accounts become eligible when native cache/proxy is enabled. Existing credentials and cooldowns are preserved. Busy/failed runs retry at a later scheduled cycle. Deactivate/reactivate only to rotate all credentials or upgrade. Unsupported/missing credentials fail closed; no API fallback exists.
 
 == Upgrade Notice ==
+= 0.5.5 =
+Removes the Update URI header for WordPress.org submission and relies on WordPress automatic translation loading. The native account cache-clear protocol is unchanged; the existing 0.5.4 server companion remains compatible.
+
 = 0.5.4 =
 Renamed to Clear Nginx for Webuzo. Deactivate the previous Webuzo Site Cache plugin before activating this package; the plugin folder and main file now use clear-nginx-for-webuzo.
 
@@ -58,6 +61,9 @@ Adds a root-owned enrollment cron every ten minutes. It never clears cache, has 
 Replaces the custom root daemon with Webuzo's native clear command and removes general API compatibility. An administrator visit removes old saved API settings. Revoke any previous broad account API key separately in Webuzo; deleting its saved copy does not revoke it.
 
 == Changelog ==
+= 0.5.5 =
+Removes the non-directory update identity and redundant explicit translation loader. Uses the standard WordPress update and translation mechanisms.
+
 = 0.5.4 =
 New display name, matching slug/text domain/package and duplicate-installation guard. Existing account credentials and notice settings are preserved.
 

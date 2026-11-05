@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /** WordPress administrator UI and authorized manual actions. */
 final class Plugin {
 
-	const VERSION = '0.5.4';
+	const VERSION = '0.5.5';
 	const OPTION  = 'webuzo_site_cache_api';
 	const SLUG    = 'clear-nginx-for-webuzo';
 
@@ -32,19 +32,12 @@ final class Plugin {
 	 */
 	public static function boot( $plugin_file ) {
 		self::$plugin_file = $plugin_file;
-		add_action( 'init', array( __CLASS__, 'translations' ) );
 		add_action( 'admin_init', array( __CLASS__, 'retire_legacy_credentials' ) );
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
 		add_action( 'admin_bar_menu', array( __CLASS__, 'bar' ), 100 );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'styles' ) );
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'styles' ) );
 		add_action( 'admin_post_webuzo_site_cache', array( __CLASS__, 'handle' ) );
-	}
-
-	/** Load bundled translations after WordPress initializes. */
-	public static function translations() {
-		// phpcs:ignore PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound -- GitHub-distributed translations need a local language path; this plugin is not hosted on WordPress.org.
-		load_plugin_textdomain( 'clear-nginx-for-webuzo', false, dirname( plugin_basename( self::$plugin_file ) ) . '/languages' );
 	}
 
 	/** Load toolbar styles only for an authorized, visible toolbar. */

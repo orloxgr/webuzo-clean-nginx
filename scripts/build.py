@@ -42,6 +42,7 @@ def package(destination, sources, manifest_path='SHA256SUMS.txt'):
 
 def main():
     source = (ROOT / PLUGIN[0]).read_text(encoding='utf-8')
+    assert not re.search(r'^ \* Update URI:', source, re.M), 'WordPress.org packages must not override the update URI.'
     version = re.search(r'^ \* Version: ([0-9.]+)$', source, re.M).group(1)
     assert json.loads((ROOT / 'webuzo-clean-nginx/info.json').read_text())['version'] == version
     assert '\nVersion: ' + version + '\n' in (ROOT / NATIVE[0]).read_text()

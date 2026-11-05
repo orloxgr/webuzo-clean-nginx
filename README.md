@@ -1,6 +1,6 @@
 # Webuzo Clean Nginx
 
-Version **0.5.4**, review candidate.
+Version **0.5.5**, review candidate.
 
 A Webuzo plugin and companion WordPress plugin that let WordPress administrators clear their hosting account's Nginx cache from the WordPress dashboard or toolbar.
 
@@ -10,12 +10,12 @@ This project is an independent third-party integration. It is not affiliated wit
 
 ## Downloads
 
-Download the two installable ZIPs from [release v0.5.4](https://github.com/orloxgr/webuzo-clean-nginx/releases/tag/v0.5.4). The release also includes `SHA256SUMS.txt` for checking the downloads.
+Download the two installable ZIPs from [release v0.5.5](https://github.com/orloxgr/webuzo-clean-nginx/releases/tag/v0.5.5). The release also includes `SHA256SUMS.txt` for checking the downloads.
 
 | Package | Install in | Purpose |
 | --- | --- | --- |
-| [Webuzo Clean Nginx](https://github.com/orloxgr/webuzo-clean-nginx/releases/download/v0.5.4/webuzo-clean-nginx-0.5.4-public-review.zip) | Webuzo Admin, once per server | Enroll accounts and handle authenticated cache-clear requests through Webuzo's native backend |
-| [Clear Nginx for Webuzo](https://github.com/orloxgr/webuzo-clean-nginx/releases/download/v0.5.4/clear-nginx-for-webuzo-0.5.4-public-review.zip) | Each WordPress installation that needs a clear-cache button | Test the connection and request a manual account cache clear |
+| [Webuzo Clean Nginx](https://github.com/orloxgr/webuzo-clean-nginx/releases/download/v0.5.5/webuzo-clean-nginx-0.5.5-public-review.zip) | Webuzo Admin, once per server | Enroll accounts and handle authenticated cache-clear requests through Webuzo's native backend |
+| [Clear Nginx for Webuzo](https://github.com/orloxgr/webuzo-clean-nginx/releases/download/v0.5.5/clear-nginx-for-webuzo-0.5.5-public-review.zip) | Each WordPress installation that needs a clear-cache button | Test the connection and request a manual account cache clear |
 
 Use these release assets when installing. GitHub's **Source code** archives contain the repository and are not the individual plugin packages.
 
@@ -35,7 +35,7 @@ WordPress actions require `manage_options`, POST and an operation-specific nonce
 
 See [installation, upgrade and removal](docs/INSTALLATION.md) for permissions, installed files and troubleshooting, and [security review](docs/SECURITY-REVIEW.md) for the tested scope and limitations.
 
-Version 0.5.4 renames the WordPress companion to Clear Nginx for Webuzo with a matching plugin folder, slug and text domain. It includes an upgrade guard for duplicate active installations. The WordPress client uses the HTTP API, translatable UI/errors, a translation template, scoped toolbar styles and GitHub update identity. See [WordPress quality checks](docs/WORDPRESS-QUALITY.md) for the coding standards, compatibility checks and the documented directory-specific Plugin Check exception.
+Version 0.5.5 removes the WordPress Update URI header and redundant explicit translation loading for WordPress.org submission. It uses the standard WordPress update and translation mechanisms, without a custom updater. The account-scoped transport, native purge command and ten-minute enrollment cron are unchanged. The existing 0.5.4 Webuzo companion remains compatible; no server companion upgrade or credential rotation is needed for this WordPress fix. See [WordPress quality checks](docs/WORDPRESS-QUALITY.md) for the coding standards, compatibility checks and full Plugin Check procedure.
 
 ## New accounts and scheduled enrollment
 

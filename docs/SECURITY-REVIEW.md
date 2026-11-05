@@ -1,4 +1,4 @@
-# Version 0.5.4 review scope
+# Version 0.5.5 review scope
 
 This is a developer-run review candidate, not an independent penetration test or a claim that a privileged plugin cannot contain vulnerabilities.
 
@@ -57,3 +57,5 @@ Version 0.5.1 additionally exercises a real system-cron enrollment of a newly cr
 - Enrollment refresh depends on working system cron and a successful ten-minute run. Busy/failed runs can delay new accounts until a later cycle. Native account metadata/layout and active-plugin loading behavior are version-dependent; unsupported setups fail closed and require administrator review.
 
 Version 0.5.4 renames only the WordPress public identity and adds a duplicate-installation guard. Manual migration retains the account credentials and existing native backend. The account-scoped transport and native bridge protocol remain unchanged.
+
+Version 0.5.5 removes the WordPress Update URI header and redundant translation loader for directory submission. Native bridge and lifecycle code are unchanged; the existing 0.5.4 server companion remains compatible.
