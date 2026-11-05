@@ -28,7 +28,7 @@ msgstr ""
 
 #. Description of the plugin
 #: clear-nginx-for-webuzo.php
-msgid "Clear account Nginx cache through Webuzo's native backend with a purge-only account credential."
+msgid "Clear your hosting account's Nginx cache from the WordPress dashboard or toolbar."
 msgstr ""
 
 #. Author of the plugin
