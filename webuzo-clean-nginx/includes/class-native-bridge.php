@@ -21,6 +21,9 @@ final class WCN_Native_Bridge {
         }
         if ($s['size'] > 1048576) { throw new RuntimeException('identity_changed'); }
         $data = json_decode(file_get_contents($path), true);
+        if (is_array($data) && (!empty($data['disable_nginx_cache']) || !empty($data['disable_reverse_proxy']))) {
+            throw new RuntimeException('cache_unavailable');
+        }
         if (!is_array($data) || ($data['user'] ?? '') !== $account || !isset($data['uuid'], $data['created']) ||
             !is_string($data['uuid']) || !preg_match('/^[A-Za-z0-9-]{8,64}$/D', $data['uuid']) ||
             !is_int($data['created']) || $data['created'] <= 0) { throw new RuntimeException('identity_changed'); }

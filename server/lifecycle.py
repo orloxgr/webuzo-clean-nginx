@@ -13,11 +13,19 @@ import stat
 import subprocess
 import sys
 import tempfile
+import time
 
 HERE = Path(__file__).resolve().parent
 CONFIG = Path('/etc/webuzo-clean-nginx/bridge.json')
 ROOT = Path('/var/lib/webuzo-clean-nginx')
 CACHE = Path('/var/webuzo-data/nginx_proxy_cache')
+CRON = Path('/etc/cron.d/webuzo-clean-nginx')
+REFRESH_LOG = ROOT / 'refresh.log'
+CRON_TEXT = ('# Managed by Webuzo Clean Nginx; enrollment only, never cache purge.\n'
+             'SHELL=/bin/sh\nMAILTO=""\nPATH=/usr/sbin:/usr/bin:/sbin:/bin\n'
+             '*/10 * * * * root /usr/bin/timeout --signal=TERM --kill-after=2s 45s '
+             '/usr/bin/python3 -I -B /usr/local/webuzo/plugins/webuzo-clean-nginx/service/lifecycle.py refresh '
+             '>> /var/lib/webuzo-clean-nginx/refresh.log 2>&1\n')
 LEGACY = ('/usr/local/lib/webuzo-cache-purge/webuzo_cache_purge.py',
           '/etc/webuzo-cache-purge/accounts.json', '/etc/systemd/system/webuzo-cache-purge.service')
 
@@ -39,13 +47,16 @@ def directory(path, mode):
     os.chmod(path, mode)
 
 
-def write(path, data, mode=0o600, gid=0):
+def write_bytes(path, content, mode=0o600, gid=0):
     if path.exists() or path.is_symlink():
         trusted(path)
+        info = path.stat()
+        if path.read_bytes() == content and stat.S_IMODE(info.st_mode) == mode and info.st_gid == gid:
+            return False
     fd, temporary = tempfile.mkstemp(prefix='.bridge-', dir=path.parent)
     try:
         with os.fdopen(fd, 'wb') as output:
-            output.write(json.dumps(data, separators=(',', ':')).encode() + b'\n')
+            output.write(content)
             output.flush()
             os.fsync(output.fileno())
             os.fchown(output.fileno(), 0, gid)
@@ -54,6 +65,11 @@ def write(path, data, mode=0o600, gid=0):
     finally:
         if os.path.exists(temporary):
             os.unlink(temporary)
+    return True
+
+
+def write(path, data, mode=0o600, gid=0):
+    return write_bytes(path, json.dumps(data, separators=(',', ':')).encode() + b'\n', mode, gid)
 
 
 def read_config():
@@ -92,6 +108,8 @@ def retire_legacy():
 
 
 def identities():
+    if not CACHE.exists() and not CACHE.is_symlink():
+        return []
     if not CACHE.is_dir() or CACHE.resolve() != CACHE:
         raise ValueError('Native cache base is missing or unsafe.')
     users = pwd.getpwall()
@@ -134,6 +152,8 @@ def native_generation(account):
     if path.stat().st_size > 1048576:
         raise ValueError('Oversize native metadata.')
     data = json.loads(path.read_text())
+    if any(data.get(flag) not in (None, False, 0, '', '0') for flag in ('disable_nginx_cache', 'disable_reverse_proxy')):
+        raise ValueError('Native account cache or proxy is disabled.')
     if data.get('user') != account or not re.fullmatch('[A-Za-z0-9-]{8,64}', data.get('uuid', '')) or \
             type(data.get('created')) is not int or data['created'] <= 0:
         raise ValueError('Missing native account generation.')
@@ -158,25 +178,45 @@ def validate_bundle():
 
 
 def main():
-    if os.geteuid() != 0 or len(sys.argv) != 2 or sys.argv[1] not in ('install', 'remove'):
-        raise SystemExit('Only the administrator may invoke the fixed install/remove lifecycle.')
+    if os.geteuid() != 0 or len(sys.argv) != 2 or sys.argv[1] not in ('install', 'remove', 'refresh'):
+        raise SystemExit('Only the administrator may invoke the fixed install/remove/refresh lifecycle.')
+    operation = sys.argv[1]
     os.umask(0o077)
     validate_bundle()
-    directory(ROOT, 0o755)
-    directory(ROOT / 'clients', 0o711)
-    directory(ROOT / 'state', 0o700)
-    directory(CONFIG.parent, 0o700)
+    if operation == 'refresh':
+        # A queued cron invocation must never reactivate a disabled plugin.
+        if not CONFIG.exists() or not CRON.exists():
+            return
+        for path in (ROOT, ROOT / 'clients', ROOT / 'state', CONFIG.parent, CRON.parent):
+            trusted(path, True)
+        trusted(CRON)
+        if CRON.read_text() != CRON_TEXT:
+            raise SystemExit('Unexpected enrollment cron content; refresh refused.')
+    else:
+        directory(ROOT, 0o755)
+        directory(ROOT / 'clients', 0o711)
+        directory(ROOT / 'state', 0o700)
+        directory(CONFIG.parent, 0o700)
     lock = ROOT / 'lifecycle.lock'
-    if not lock.exists():
+    if not lock.exists() and operation != 'refresh':
         write(lock, {})
     trusted(lock)
     with lock.open('r+') as handle:
-        fcntl.flock(handle, fcntl.LOCK_EX)
+        try:
+            fcntl.flock(handle, fcntl.LOCK_EX | (fcntl.LOCK_NB if operation == 'refresh' else 0))
+        except BlockingIOError:
+            return  # A running purge or lifecycle operation wins; retry next scheduled run.
+        if operation == 'refresh' and (not CONFIG.exists() or not CRON.exists()):
+            return
         old = read_config()
-        write(ROOT / 'status.json', {'state': 'pending', 'accounts': 0}, 0o644)
-        retire_legacy()
+        if operation != 'refresh':
+            write(ROOT / 'status.json', {'state': 'pending', 'accounts': 0}, 0o644)
+            retire_legacy()
+        if operation == 'remove' and (CRON.exists() or CRON.is_symlink()):
+            trusted(CRON)
+            CRON.unlink()
         keys = {}
-        if sys.argv[1] == 'install':
+        if operation in ('install', 'refresh'):
             for executable in ('/usr/local/emps/bin/php', '/usr/local/webuzo/cli.php', '/usr/bin/timeout'):
                 trusted(Path(executable))
             old_by_uid = {e['uid']: (i, e) for i, e in old['keys'].items()}
@@ -211,10 +251,22 @@ def main():
             if re.fullmatch('[a-f0-9]{32}[.]json', path.name) and path.stem not in keys:
                 trusted(path)
                 path.unlink()
-        if sys.argv[1] == 'remove':
+        if operation == 'remove':
             CONFIG.unlink()
-        write(ROOT / 'status.json', {'state': 'ready' if sys.argv[1] == 'install' else 'disabled', 'accounts': len(keys)}, 0o644)
-    print('Native bridge lifecycle completed. Enrolled accounts: ' + str(len(keys)))
+        elif operation == 'install':
+            trusted(CRON.parent, True)
+            trusted(REFRESH_LOG.parent, True)
+            if REFRESH_LOG.exists() or REFRESH_LOG.is_symlink():
+                trusted(REFRESH_LOG)
+                os.chmod(REFRESH_LOG, 0o600)
+            else:
+                write_bytes(REFRESH_LOG, b'')
+            write_bytes(CRON, CRON_TEXT.encode(), 0o644)
+        summary = {'state': 'disabled' if operation == 'remove' else 'ready', 'accounts': len(keys),
+                   'refresh_interval_minutes': 10, 'last_refresh': int(time.time())}
+        write(ROOT / 'status.json', summary, 0o644)
+    if operation != 'refresh' or keys != old['keys']:
+        print('Native bridge ' + operation + ' completed. Enrolled accounts: ' + str(len(keys)))
 
 
 if __name__ == '__main__':

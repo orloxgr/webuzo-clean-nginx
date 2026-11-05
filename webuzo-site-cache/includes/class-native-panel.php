@@ -22,13 +22,13 @@ final class NativePanel {
         $s = @lstat($path);
         if (realpath($dir) !== $dir || !$s || ($s['mode'] & 0170000) !== 0100000 || $s['uid'] !== 0 ||
             ($s['mode'] & 0027) || $s['nlink'] !== 1 || $s['size'] > 1024) {
-            throw new \RuntimeException('The hosting administrator must activate Webuzo Clean Nginx and enroll this account.');
+            throw new \RuntimeException('The hosting administrator must activate Webuzo Clean Nginx. If this account or its Nginx cache is new, wait for the next enrollment sync, scheduled every 10 minutes, then retry.');
         }
         $value = json_decode((string) @file_get_contents($path), true);
         if (!is_array($value) || ($value['v'] ?? null) !== 1 || !isset($value['id'], $value['key']) ||
             !is_string($value['id']) || !preg_match('/^[a-f0-9]{32}$/D', $value['id']) ||
             !is_string($value['key']) || !preg_match('/^[a-f0-9]{64}$/D', $value['key'])) {
-            throw new \RuntimeException('The native panel credential is unavailable or invalid. Ask the hosting administrator to refresh enrollment.');
+            throw new \RuntimeException('The native panel credential is unavailable or invalid. Wait for the next enrollment sync (every 10 minutes); if it persists, ask the hosting administrator to check account eligibility.');
         }
         return $value;
     }
@@ -92,7 +92,7 @@ final class NativePanel {
                     'busy' => 'A cache clear is already running. Try again shortly.',
                     'identity_changed' => 'The hosting administrator must refresh enrollment after an account identity change.',
                     'native_failed' => 'The native Webuzo clear command did not complete normally. Check the panel log; cache clearing is not confirmed.',
-                    'cache_unavailable' => 'The account cache directory is missing or unsafe.',
+                    'cache_unavailable' => 'Account Nginx caching or reverse proxy is disabled, or its cache directory is missing or unsafe.',
                     'replayed' => 'The panel rejected a repeated request. Try again with a fresh request.'];
                 throw new \RuntimeException($messages[$data['code'] ?? ''] ?? 'The native panel rejected the cache request.');
             }

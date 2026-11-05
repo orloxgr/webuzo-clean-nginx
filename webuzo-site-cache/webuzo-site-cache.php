@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Webuzo Site Cache
  * Description: Clear account Nginx cache through Webuzo's native backend with a purge-only account credential.
- * Version: 0.5.0
+ * Version: 0.5.1
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Byron Iniotakis
@@ -75,7 +75,8 @@ final class Plugin {
         echo '<h2>Clear account cache</h2>';
         self::start_form('purge'); submit_button('Clear Nginx cache for this account', 'primary'); echo '</form>';
         echo '<p>Wait 2 seconds between connection checks and 10 seconds between cache clears.</p>';
-        echo '<p>Version 0.5.0 · Manual account-wide clearing through Webuzo. No automatic purge or change to whether caching is enabled.</p></div>';
+        echo '<p>New accounts become available after the provider’s next enrollment sync, scheduled every 10 minutes.</p>';
+        echo '<p>Version 0.5.1 · Manual account-wide clearing through Webuzo. No automatic purge or change to whether caching is enabled.</p></div>';
     }
 
     public static function handle() {

@@ -1,6 +1,6 @@
 # Webuzo Clean Nginx
 
-By **Byron Iniotakis**. GPL-2.0-or-later. Version **0.5.0**, review candidate.
+By **Byron Iniotakis**. GPL-2.0-or-later. Version **0.5.1**, review candidate.
 
 A Webuzo administrator plugin and companion WordPress plugin for clearing a hosting account's Nginx cache using **Webuzo's existing privileged backend and native clear command**.
 
@@ -18,21 +18,21 @@ A Webuzo administrator plugin and companion WordPress plugin for clearing a host
 
 **All websites in the hosting account are affected.** The request cannot contain an account name, path, domain, command or uploaded file. The only operations are `status` and `purge`.
 
-The native operation deletes cache contents from disk; this is not an Nginx HTTP `PURGE` module. The plugin delegates that operation to Webuzo. It does not have its own cache-file scanner/deleter, persistent purge daemon, cron, timer, sudo rule or setuid helper. It does not patch Webuzo core or Nginx/PHP configuration.
+The native operation deletes cache contents from disk; this is not an Nginx HTTP `PURGE` module. The plugin delegates that operation to Webuzo. It does not have its own cache-file scanner/deleter, persistent purge daemon, timer, sudo rule or setuid helper. A root cron synchronizes enrollment every **10 minutes**; it never purges cache. No Webuzo core or Nginx/PHP configuration is patched.
 
 ## Installation
 
 Read [installation and removal](docs/INSTALLATION.md) and [security scope](docs/SECURITY-REVIEW.md).
 
 1. Build with `python scripts/build.py`.
-2. Upload `webuzo-clean-nginx-0.5.0-public-review.zip` in **Webuzo Admin → Plugins → Installed Plugins → Add New**, then activate it.
-3. Upload `webuzo-site-cache-0.5.0-public-review.zip` in WordPress and activate it.
+2. Upload `webuzo-clean-nginx-0.5.1-public-review.zip` in **Webuzo Admin → Plugins → Installed Plugins → Add New**, then activate it.
+3. Upload `webuzo-site-cache-0.5.1-public-review.zip` in WordPress and activate it.
 4. Open **Tools → Webuzo Site Cache → Test connection**.
 5. Use **Clear Cache → Clear Cache** in the administrator toolbar, or the settings-page button.
 
 Wait 2 seconds between requests and 10 seconds between purges. WordPress requires `manage_options`, POST and an operation-specific nonce. The account-wide warning remains visible; there is no confirmation checkbox or filesystem preview.
 
-Account enrollment is a snapshot of eligible native accounts with cache directories and private primary groups. Deactivate/reactivate after creating accounts or enabling cache. Existing account identity and Webuzo creation metadata are checked on every request; a deleted/recreated account cannot inherit an old capability merely by reusing its Unix UID. No automatic account-reconciliation cron is installed.
+Enrollment automatically reconciles eligible native accounts every 10 minutes. New accounts become available after their cache/proxy is enabled and the next successful sync. Existing keys, replay history and purge cooldowns are preserved. Disabled/deleted accounts lose their enrollment, and recreated identities receive fresh keys. Every bridge request also checks current account identity and native creation metadata. A busy lifecycle lock skips that run and retries at the next scheduled interval; see the admin page's last-sync time and private refresh log.
 
 ## Requirements and limits
 
@@ -41,7 +41,7 @@ Account enrollment is a snapshot of eligible native accounts with cache director
 - The existing end-user panel must listen locally on port 2002. The active-plugin loading stage and native CLI must match the tested Webuzo behavior.
 - Linux hosting accounts need separate UIDs and private primary groups. Shared groups are not enrolled.
 - The hosting administrator installs the Webuzo plugin once per server. Customers do not need root or SSH; providers on other servers must install the companion plugin themselves.
-- Python 3 is needed only for native activation/deactivation. GNU `timeout` bounds native child execution. No packages are installed automatically.
+- Python 3 is needed for native lifecycle and enrollment refresh. Working system cron is required; the plugin installs its own root-owned `/etc/cron.d/webuzo-clean-nginx` entry. GNU `timeout` bounds native children and the refresh job. No packages are installed automatically.
 
 Requests and responses are authenticated with HMAC-SHA256. Only a public random credential identifier and signature are sent, never the signing secret. The loopback transport uses the existing HTTP panel; it is not encrypted. Fresh nonces, expiry and signed responses prevent accepting a forged or replayed result.
 
@@ -59,9 +59,10 @@ Version 0.5.0 replaces the previous filesystem broker. Activation retires only t
 php tests/native-bridge-contract.php
 php tests/native-client-contract.php
 php tests/wordpress-contract.php
+python3 -I -B tests/lifecycle-contract.py
 ```
 
-These portable protocol/client/WordPress stub suites contain 29, 14 and 24 assertions. They do not clear live cache. Native deployment acceptance also exercises actual WordPress HTTP/PHP-FPM, two hosting accounts, filesystem attacks, native plugin lifecycle and credential revocation. See the report for the precise tested scope. These are developer-run checks, not an independent penetration test.
+The protocol/client/WordPress stub suites contain 29, 14 and 24 assertions; the isolated lifecycle suite adds 17. They do not clear live cache. Native deployment acceptance also exercises actual WordPress HTTP/PHP-FPM, hosting-account isolation, filesystem attacks, native plugin lifecycle, credential revocation and the ten-minute cron with disposable accounts. See the report for the precise tested scope. These are developer-run checks, not an independent penetration test.
 
 ## Public packages
 

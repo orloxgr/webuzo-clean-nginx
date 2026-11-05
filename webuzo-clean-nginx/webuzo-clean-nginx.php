@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Webuzo Clean Nginx
-Version: 0.5.0
+Version: 0.5.1
 Description: Account-scoped WordPress requests using Webuzo's native cache clear command.
 Author: Byron Iniotakis
 License: GPL-2.0-or-later
@@ -58,10 +58,12 @@ admin_act('webuzo-clean-nginx', 'wcn_admin');
 function wcn_admin() { theme_for_act('wcn_admin_theme', 'webuzo-clean-nginx'); }
 function wcn_admin_theme() {
     $state = wcn_state();
-    echo '<div class="soft-smbox p-4"><h2>Webuzo Clean Nginx</h2><p>By Byron Iniotakis &middot; Version 0.5.0</p>';
+    echo '<div class="soft-smbox p-4"><h2>Webuzo Clean Nginx</h2><p>By Byron Iniotakis &middot; Version 0.5.1</p>';
     echo '<p><strong>Native bridge: ' . htmlspecialchars((string) $state['state'], ENT_QUOTES, 'UTF-8') . '</strong>. Enrolled accounts: ' . (int) $state['accounts'] . '.</p>';
     echo '<p>WordPress uses an account-specific signing credential to request only a connection check or account cache clear through the existing Webuzo backend. No separate purge daemon or general hosting API key is needed.</p>';
     echo '<p><strong>Clearing affects every website in the hosting account.</strong> Webuzo performs the native filesystem operation. The plugin does not patch Webuzo, Nginx or PHP configuration.</p>';
-    echo '<p>Install the companion WordPress plugin and select Native Webuzo bridge. Test the connection from each account. Requests use the local panel port 2002.</p>';
-    echo '<p>Activation enrolls eligible accounts with native cache directories and a private primary group. Deactivate/reactivate to refresh enrollment or rotate all credentials. Deactivation revokes plugin credentials without clearing cache.</p></div>';
+    echo '<p>Install the companion WordPress plugin and test the connection from each account. Requests use the local panel port 2002.</p>';
+    echo '<p>Eligible accounts are synchronized automatically every 10 minutes. This includes new accounts and accounts whose cache is enabled later. Existing account keys and purge cooldowns are preserved. The scheduled task never clears cache.</p>';
+    if (!empty($state['last_refresh'])) { echo '<p>Last enrollment sync (UTC): ' . htmlspecialchars(gmdate('Y-m-d H:i:s', (int) $state['last_refresh']), ENT_QUOTES, 'UTF-8') . '.</p>'; }
+    echo '<p>Deactivate/reactivate to rotate all credentials. Deactivation removes the scheduled task and revokes credentials without clearing cache.</p></div>';
 }
