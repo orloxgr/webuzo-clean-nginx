@@ -1,6 +1,6 @@
 # Webuzo Clean Nginx
 
-By **Byron Iniotakis**. GPL-2.0-or-later. Version **0.5.1**, review candidate.
+Version **0.5.1**, review candidate.
 
 A Webuzo plugin and companion WordPress plugin that let WordPress administrators clear their hosting account's Nginx cache from the WordPress dashboard or toolbar.
 
