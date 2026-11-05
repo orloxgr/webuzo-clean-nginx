@@ -1,6 +1,6 @@
 # Webuzo Clean Nginx
 
-Version **0.5.2**, review candidate.
+Version **0.5.3**, review candidate.
 
 A Webuzo plugin and companion WordPress plugin that let WordPress administrators clear their hosting account's Nginx cache from the WordPress dashboard or toolbar.
 
@@ -8,12 +8,12 @@ A Webuzo plugin and companion WordPress plugin that let WordPress administrators
 
 ## Downloads
 
-Download the two installable ZIPs from [release v0.5.2](https://github.com/orloxgr/webuzo-clean-nginx/releases/tag/v0.5.2). The release also includes `SHA256SUMS.txt` for checking the downloads.
+Download the two installable ZIPs from [release v0.5.3](https://github.com/orloxgr/webuzo-clean-nginx/releases/tag/v0.5.3). The release also includes `SHA256SUMS.txt` for checking the downloads.
 
 | Package | Install in | Purpose |
 | --- | --- | --- |
-| [Webuzo Clean Nginx](https://github.com/orloxgr/webuzo-clean-nginx/releases/download/v0.5.2/webuzo-clean-nginx-0.5.2-public-review.zip) | Webuzo Admin, once per server | Enroll accounts and handle authenticated cache-clear requests through Webuzo's native backend |
-| [Webuzo Site Cache](https://github.com/orloxgr/webuzo-clean-nginx/releases/download/v0.5.2/webuzo-site-cache-0.5.2-public-review.zip) | Each WordPress installation that needs a clear-cache button | Test the connection and request a manual account cache clear |
+| [Webuzo Clean Nginx](https://github.com/orloxgr/webuzo-clean-nginx/releases/download/v0.5.3/webuzo-clean-nginx-0.5.3-public-review.zip) | Webuzo Admin, once per server | Enroll accounts and handle authenticated cache-clear requests through Webuzo's native backend |
+| [Webuzo Site Cache](https://github.com/orloxgr/webuzo-clean-nginx/releases/download/v0.5.3/webuzo-site-cache-0.5.3-public-review.zip) | Each WordPress installation that needs a clear-cache button | Test the connection and request a manual account cache clear |
 
 Use these release assets when installing. GitHub's **Source code** archives contain the repository and are not the individual plugin packages.
 
@@ -31,7 +31,7 @@ WordPress actions require `manage_options`, POST and an operation-specific nonce
 
 See [installation, upgrade and removal](docs/INSTALLATION.md) for permissions, installed files and troubleshooting, and [security review](docs/SECURITY-REVIEW.md) for the tested scope and limitations.
 
-Version 0.5.2 adds WordPress HTTP API transport, translatable UI/errors, a translation template, scoped toolbar styles and GitHub update identity. See [WordPress quality checks](docs/WORDPRESS-QUALITY.md) for the coding standards, compatibility checks and the documented directory-specific Plugin Check exception.
+Version 0.5.3 uses full plugin-specific notice keys and documents the local Webuzo request data. The WordPress client uses the HTTP API, translatable UI/errors, a translation template, scoped toolbar styles and GitHub update identity. See [WordPress quality checks](docs/WORDPRESS-QUALITY.md) for the coding standards, compatibility checks and the documented directory-specific Plugin Check exception.
 
 ## New accounts and scheduled enrollment
 
@@ -89,9 +89,11 @@ php tests/wordpress-contract.php
 python3 -I -B tests/lifecycle-contract.py
 ```
 
-The protocol/client/WordPress stub suites contain 29, 28 and 30 assertions; the isolated lifecycle suite adds 17. They do not clear live cache. Native deployment acceptance also exercises actual WordPress HTTP/PHP-FPM, hosting-account isolation, filesystem attacks, native plugin lifecycle, credential revocation and the ten-minute cron with disposable accounts. See the report for the precise tested scope. These are developer-run checks, not an independent penetration test.
+The protocol/client/WordPress stub suites contain 29, 28 and 32 assertions; the isolated lifecycle suite adds 17. They do not clear live cache. Native deployment acceptance also exercises actual WordPress HTTP/PHP-FPM, hosting-account isolation, filesystem attacks, native plugin lifecycle, credential revocation and the ten-minute cron with disposable accounts. See the report for the precise tested scope. These are developer-run checks, not an independent penetration test.
 
 For WordPress coding standards and PHP compatibility, run `composer install` followed by `composer lint`. Use `composer test:wordpress` for the WordPress handler and HTTP client fixtures. The minimum-version fixture uses WordPress 6.0 / PHP 7.4; the current HTTP/PHP-FPM fixture uses WordPress 7.1.4 / PHP 8.3.
+
+The 0.5.3 HTTP acceptance also runs with `WP_DEBUG=true` on two clean installations. Private logs are checked for unexpected errors, warnings and notices, and the original WordPress debug settings are restored afterward. See the quality report for the precise procedure and results.
 
 ## Building packages
 

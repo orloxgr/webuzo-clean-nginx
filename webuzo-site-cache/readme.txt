@@ -4,7 +4,7 @@ Tested up to: 7.1
 Tags: webuzo, nginx, cache, purge
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 0.5.2
+Stable tag: 0.5.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -21,6 +21,15 @@ Single-site WordPress 6.0+, PHP 7.4+ with POSIX, HMAC hashing and a working Word
 
 This review candidate has developer-run protocol and native deployment checks. It is not an independent penetration test. A completed native command is not an independently verified cache deletion count. Revalidate actual cache behavior after Webuzo upgrades.
 
+== Local Webuzo connection and data ==
+This plugin requires the hosting provider to install and activate the companion Webuzo Clean Nginx plugin on the same server. It does not create a Webuzo panel account or require a panel login, panel password or general API key.
+
+Clicking Test connection or Clear Cache sends a signed POST request to http://127.0.0.1:2002/index.php?act=webuzo-clean-nginx-bridge on that same server. The destination is fixed and redirects are disabled. These requests check enrollment or clear the Nginx cache of the entire hosting account; publishing a post does not send an automatic purge.
+
+The JSON body contains the protocol version, requested operation, random account credential identifier, timestamp and a fresh random nonce. The request header carries an HMAC signature. The account signing secret is read from a root-owned file outside website directories and is never sent. WordPress may include its standard HTTP User-Agent with the WordPress version and site URL. No post content, visitor information or WordPress login credentials are included by this plugin.
+
+This connection remains on the hosting server. The plugin does not load remote scripts, styles or images, or send analytics to the plugin author. The provider provisions credentials automatically; WordPress administrators do not need to edit plugin files or paste credentials. This service integration is self-hosted; it is not a subscription to a service operated by the plugin author. See the companion source and installation requirements at https://github.com/orloxgr/webuzo-clean-nginx.
+
 == Installation ==
 1. Hosting administrator reviews the source and installation/security documentation.
 2. Upload and activate Webuzo Clean Nginx in Webuzo Admin > Plugins.
@@ -31,6 +40,9 @@ This review candidate has developer-run protocol and native deployment checks. I
 The companion Webuzo plugin synchronizes enrollment automatically every ten minutes. New accounts become eligible when native cache/proxy is enabled. Existing credentials and cooldowns are preserved. Busy/failed runs retry at a later scheduled cycle. Deactivate/reactivate only to rotate all credentials or upgrade. Unsupported/missing credentials fail closed; no API fallback exists.
 
 == Upgrade Notice ==
+= 0.5.3 =
+Uses a full plugin-specific prefix for temporary notices and documents the local Webuzo connection and request data.
+
 = 0.5.2 =
 Uses the WordPress HTTP API with no redirects, bounded responses and signed account-only requests. Adds translation support, scoped toolbar styles and update identity.
 
@@ -41,6 +53,9 @@ Adds a root-owned enrollment cron every ten minutes. It never clears cache, has 
 Replaces the custom root daemon with Webuzo's native clear command and removes general API compatibility. An administrator visit removes old saved API settings. Revoke any previous broad account API key separately in Webuzo; deleting its saved copy does not revoke it.
 
 == Changelog ==
+= 0.5.3 =
+Unique notice keys, explicit local-connection documentation and WordPress debug-mode verification. Existing notices expire within two minutes.
+
 = 0.5.2 =
 WordPress standards cleanup, translatable UI/errors, translation template, HTTP API transport, accessible toolbar focus styling, metadata and automated quality checks.
 

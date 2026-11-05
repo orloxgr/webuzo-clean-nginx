@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /** WordPress administrator UI and authorized manual actions. */
 final class Plugin {
 
-	const VERSION = '0.5.2';
+	const VERSION = '0.5.3';
 	const OPTION  = 'webuzo_site_cache_api';
 	const SLUG    = 'webuzo-site-cache';
 
@@ -64,7 +64,7 @@ final class Plugin {
 			delete_option( self::OPTION );
 			if ( ! empty( $old['key'] ) ) {
 				set_transient(
-					'wsc_notice_' . get_current_user_id(),
+					'webuzo_site_cache_notice_' . get_current_user_id(),
 					array(
 						'type' => 'warning',
 						'text' => __( 'Legacy API settings were removed from WordPress. Revoke the previous account API key in Webuzo as well; deleting its saved copy does not revoke it.', 'webuzo-site-cache' ),
@@ -140,9 +140,9 @@ final class Plugin {
 			echo '<p>' . esc_html__( 'This release supports single-site WordPress only.', 'webuzo-site-cache' ) . '</p></div>';
 			return;
 		}
-		$notice = get_transient( 'wsc_notice_' . get_current_user_id() );
+		$notice = get_transient( 'webuzo_site_cache_notice_' . get_current_user_id() );
 		if ( is_array( $notice ) && isset( $notice['type'], $notice['text'] ) ) {
-			delete_transient( 'wsc_notice_' . get_current_user_id() );
+			delete_transient( 'webuzo_site_cache_notice_' . get_current_user_id() );
 			$type = in_array( $notice['type'], array( 'success', 'error', 'warning' ), true ) ? $notice['type'] : 'error';
 			echo '<div class="notice notice-' . esc_attr( $type ) . '"><p>' . esc_html( $notice['text'] ) . '</p></div>';
 		}
@@ -205,7 +205,7 @@ final class Plugin {
 			$type = 'error';
 		}
 		set_transient(
-			'wsc_notice_' . get_current_user_id(),
+			'webuzo_site_cache_notice_' . get_current_user_id(),
 			array(
 				'type' => $type,
 				'text' => $text,

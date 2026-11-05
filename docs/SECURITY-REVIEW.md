@@ -1,4 +1,4 @@
-# Version 0.5.2 review scope
+# Version 0.5.3 review scope
 
 This is a developer-run review candidate, not an independent penetration test or a claim that a privileged plugin cannot contain vulnerabilities.
 
@@ -30,7 +30,7 @@ Portable suites:
 | --- | ---: | --- |
 | Native protocol | 29 | Schema, HMAC binding, account-ID substitution, malformed/extra fields, expiry, duplicate keys and registry validation |
 | WordPress native client | 28 | Fixed HTTP API destination, redirects disabled, secret not sent, response HMAC/nonce/scope validation, truncation, ambiguous headers, bounded size and timeout |
-| WordPress handler/UI | 30 | Capability, method, nonce, unsupported actions, multisite, escaping, toolbar, scoped styles and removal of legacy broad credentials |
+| WordPress handler/UI | 32 | Capability, method, nonce, unsupported actions, multisite, escaping, toolbar, isolated notice keys, scoped styles and removal of legacy broad credentials |
 | Isolated lifecycle/cron | 17 | Ten-minute schedule, new/stale enrollment, identity changes, key/nonce preservation and disabled-job behavior |
 
 Native deployment acceptance uses an isolated Ubuntu/Webuzo environment and two real hosting accounts. It exercises account-separated credential access, signed requests through the actual panel, forged signatures, account overrides, replay/expiry, rate limits and unsupported operations. Its cache attack fixtures include symlinks to root-owned files outside cache and to the other account's cache. Outside data and the other account's cached content/inodes/owners/modes are compared after a native purge.
@@ -42,6 +42,8 @@ Completed native acceptance groups contain 48 endpoint/cache/credential assertio
 Private acceptance harnesses and deployment reports stay outside the public repository. They contain environment-specific setup. Public test sources use fake capabilities and generic examples only.
 
 Version 0.5.2 replaces the WordPress client's custom socket/HTTP parser with the WordPress HTTP API while retaining fixed loopback routing and signed account-only requests/responses. Its 35 real WordPress HTTP assertions are rerun with the new transport. Coding standards, Plugin Check results and the WordPress 6.0 / PHP 7.4 minimum-version fixture are described in [WordPress quality checks](WORDPRESS-QUALITY.md). The Webuzo bridge protocol, lifecycle code and ten-minute enrollment schedule are unchanged.
+
+Version 0.5.3 expands the WordPress notice prefix and documents the local connection. Its 35 real HTTP assertions run with WordPress debug logging enabled on two otherwise clean installations, with zero unexpected debug entries. Separate fixtures confirm that notices belonging to another plugin or user are not rendered or removed. Debug configurations are restored after testing. These changes do not extend the account's cache-clear authority.
 
 Version 0.5.1 additionally exercises a real system-cron enrollment of a newly created native account, late cache enablement with actual PHP-FPM connectivity, unchanged existing keys/nonce files/cache contents, overlap avoidance, root file permissions and revocation after disposable account deletion. These native enrollment checks contain 23 assertions. No Webuzo core patch is used to trigger or observe them.
 

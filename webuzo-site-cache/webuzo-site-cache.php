@@ -3,7 +3,7 @@
  * Plugin Name: Webuzo Site Cache
  * Plugin URI: https://github.com/orloxgr/webuzo-clean-nginx
  * Description: Clear account Nginx cache through Webuzo's native backend with a purge-only account credential.
- * Version: 0.5.2
+ * Version: 0.5.3
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Byron Iniotakis
