@@ -11,7 +11,7 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Clear hosting-account Nginx cache through Webuzo's native backend.
 
 == Description ==
-By Byron Iniotakis
+Clear your hosting account's Nginx cache directly from the WordPress dashboard or toolbar to help visitors see your latest changes.
 
 This is an independent third-party integration. It is not affiliated with, endorsed, sponsored, or supported by Webuzo or Softaculous. The Webuzo name is used only to describe compatibility with the hosting platform.
 
