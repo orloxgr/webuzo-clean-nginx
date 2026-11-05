@@ -1,7 +1,7 @@
 {
   "name": "Webuzo Clean Nginx",
   "slug": "webuzo-clean-nginx",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "author": "Byron Iniotakis",
   "requires": "4.0.0",
   "compatibility": [],

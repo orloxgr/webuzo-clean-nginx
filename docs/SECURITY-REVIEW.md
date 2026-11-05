@@ -1,4 +1,4 @@
-# Version 0.5.3 review scope
+# Version 0.5.4 review scope
 
 This is a developer-run review candidate, not an independent penetration test or a claim that a privileged plugin cannot contain vulnerabilities.
 
@@ -30,7 +30,7 @@ Portable suites:
 | --- | ---: | --- |
 | Native protocol | 29 | Schema, HMAC binding, account-ID substitution, malformed/extra fields, expiry, duplicate keys and registry validation |
 | WordPress native client | 28 | Fixed HTTP API destination, redirects disabled, secret not sent, response HMAC/nonce/scope validation, truncation, ambiguous headers, bounded size and timeout |
-| WordPress handler/UI | 32 | Capability, method, nonce, unsupported actions, multisite, escaping, toolbar, isolated notice keys, scoped styles and removal of legacy broad credentials |
+| WordPress handler/UI | 33 | Capability, method, nonce, unsupported actions, multisite, escaping, toolbar, duplicate-installation rejection, isolated notice keys, scoped styles and removal of legacy broad credentials |
 | Isolated lifecycle/cron | 17 | Ten-minute schedule, new/stale enrollment, identity changes, key/nonce preservation and disabled-job behavior |
 
 Native deployment acceptance uses an isolated Ubuntu/Webuzo environment and two real hosting accounts. It exercises account-separated credential access, signed requests through the actual panel, forged signatures, account overrides, replay/expiry, rate limits and unsupported operations. Its cache attack fixtures include symlinks to root-owned files outside cache and to the other account's cache. Outside data and the other account's cached content/inodes/owners/modes are compared after a native purge.
@@ -55,3 +55,5 @@ Version 0.5.1 additionally exercises a real system-cron enrollment of a newly cr
 - The local HTTP messages are authenticated, not encrypted. Any administrator/root compromise is outside this boundary. Processes with the same UID or credential-reading group share purge authority.
 - The endpoint is security-sensitive root PHP code. HMAC does not prevent every denial of service or substitute for an independent audit. No arbitrary-file-write operation or general command runner is intentionally provided.
 - Enrollment refresh depends on working system cron and a successful ten-minute run. Busy/failed runs can delay new accounts until a later cycle. Native account metadata/layout and active-plugin loading behavior are version-dependent; unsupported setups fail closed and require administrator review.
+
+Version 0.5.4 renames only the WordPress public identity and adds a duplicate-installation guard. Manual migration retains the account credentials and existing native backend. The account-scoped transport and native bridge protocol remain unchanged.

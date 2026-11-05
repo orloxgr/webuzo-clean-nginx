@@ -11,7 +11,7 @@
 !/tests/
 !/scripts/
 !/.github/
-!/webuzo-site-cache/
+!/clear-nginx-for-webuzo/
 !/webuzo-clean-nginx/
 __pycache__/
 *.py[cod]
@@ -26,4 +26,4 @@ accounts.json
 /tests/engine-runner.php
 /tests/fpm-check.py
 /tests/nginx-integration.py
-/webuzo-site-cache/includes/class-cache.php
+/clear-nginx-for-webuzo/includes/class-cache.php

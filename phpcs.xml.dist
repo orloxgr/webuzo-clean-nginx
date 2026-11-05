@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
-<ruleset name="Webuzo Site Cache">
+<ruleset name="Clear Nginx for Webuzo">
     <description>WordPress standards for the companion WordPress plugin.</description>
-    <file>webuzo-site-cache/webuzo-site-cache.php</file>
-    <file>webuzo-site-cache/includes/class-plugin.php</file>
-    <file>webuzo-site-cache/includes/class-native-panel.php</file>
+    <file>clear-nginx-for-webuzo/clear-nginx-for-webuzo.php</file>
+    <file>clear-nginx-for-webuzo/includes/class-plugin.php</file>
+    <file>clear-nginx-for-webuzo/includes/class-native-panel.php</file>
     <arg name="extensions" value="php"/>
     <config name="minimum_supported_wp_version" value="6.0"/>
     <config name="testVersion" value="7.4-"/>
@@ -11,7 +11,7 @@
     <rule ref="PHPCompatibilityWP"/>
     <rule ref="WordPress.WP.I18n">
         <properties>
-            <property name="text_domain" type="array"><element value="webuzo-site-cache"/></property>
+            <property name="text_domain" type="array"><element value="clear-nginx-for-webuzo"/></property>
         </properties>
     </rule>
 </ruleset>

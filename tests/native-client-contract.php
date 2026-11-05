@@ -44,7 +44,7 @@ namespace {
         if ($GLOBALS['scenario'] === 'compressed') { $response['headers']['content-encoding'] = 'gzip'; }
         return $response;
     }
-    require __DIR__ . '/../webuzo-site-cache/includes/class-native-panel.php';
+    require __DIR__ . '/../clear-nginx-for-webuzo/includes/class-native-panel.php';
     $checks = [];
     function check($ok, $label) { if (!$ok) { throw new \RuntimeException($label); } $GLOBALS['checks'][] = $label; }
     function fails($fn, $text) { try { $fn(); } catch (\Throwable $e) { return strpos($e->getMessage(), $text) !== false; } return false; }

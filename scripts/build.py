@@ -7,12 +7,12 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = (
-    'webuzo-site-cache/webuzo-site-cache.php',
-    'webuzo-site-cache/readme.txt',
-    'webuzo-site-cache/includes/class-native-panel.php',
-    'webuzo-site-cache/includes/class-plugin.php',
-    'webuzo-site-cache/assets/admin-bar.css',
-    'webuzo-site-cache/languages/webuzo-site-cache.pot',
+    'clear-nginx-for-webuzo/clear-nginx-for-webuzo.php',
+    'clear-nginx-for-webuzo/readme.txt',
+    'clear-nginx-for-webuzo/includes/class-native-panel.php',
+    'clear-nginx-for-webuzo/includes/class-plugin.php',
+    'clear-nginx-for-webuzo/assets/admin-bar.css',
+    'clear-nginx-for-webuzo/languages/clear-nginx-for-webuzo.pot',
 )
 NATIVE = (
     'webuzo-clean-nginx/webuzo-clean-nginx.php',
@@ -47,11 +47,11 @@ def main():
     assert '\nVersion: ' + version + '\n' in (ROOT / NATIVE[0]).read_text()
     output = ROOT / 'dist'
     output.mkdir(exist_ok=True)
-    plugin = output / ('webuzo-site-cache-' + version + '-public-review.zip')
+    plugin = output / ('clear-nginx-for-webuzo-' + version + '-public-review.zip')
     native = output / ('webuzo-clean-nginx-' + version + '-public-review.zip')
     plugin_sources = {name: name for name in PLUGIN}
-    plugin_sources['webuzo-site-cache/LICENSE'] = 'LICENSE'
-    package(plugin, plugin_sources, 'webuzo-site-cache/SHA256SUMS.txt')
+    plugin_sources['clear-nginx-for-webuzo/LICENSE'] = 'LICENSE'
+    package(plugin, plugin_sources, 'clear-nginx-for-webuzo/SHA256SUMS.txt')
     native_sources = {name: name for name in NATIVE}
     for name in ('lifecycle.py',):
         native_sources['webuzo-clean-nginx/service/' + name] = 'server/' + name

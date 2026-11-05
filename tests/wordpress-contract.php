@@ -8,7 +8,7 @@ function esc_html__($text, $domain = '') { return esc_html($text); }
 function esc_attr__($text, $domain = '') { return esc_attr($text); }
 function sanitize_text_field($value) { return strip_tags($value); }
 function is_admin_bar_showing() { return $GLOBALS['toolbar_visible'] ?? true; }
-function plugins_url($path, $file) { return 'https://www.example.test/wp-content/plugins/webuzo-site-cache/' . $path; }
+function plugins_url($path, $file) { return 'https://www.example.test/wp-content/plugins/clear-nginx-for-webuzo/' . $path; }
 function wp_enqueue_style(...$args) { $GLOBALS['styles'][] = $args; }
 function current_user_can($cap) { return $GLOBALS['authorized'] && $cap === 'manage_options'; }
 function is_multisite() { return $GLOBALS['multisite']; }
@@ -30,7 +30,7 @@ function esc_html($value) { return htmlspecialchars($value, ENT_QUOTES); }
 function wp_nonce_field($action) { echo '<input type="hidden" name="_wpnonce" value="test">'; }
 function wp_create_nonce($action) { return 'test-toolbar-nonce'; }
 function submit_button($label, $class = '') { echo '<button type="submit">' . esc_html($label) . '</button>'; }
-require __DIR__ . '/../webuzo-site-cache/webuzo-site-cache.php';
+require __DIR__ . '/../clear-nginx-for-webuzo/clear-nginx-for-webuzo.php';
 function check($ok, $label) { if (!$ok) { throw new RuntimeException($label); } $GLOBALS['checks'][] = $label; }
 function handle() { try { \WebuzoSiteCache\Plugin::handle(); } catch (RuntimeException $e) { return $e->getMessage(); } throw new RuntimeException('Missing rejection/redirect'); }
 $_SERVER['REQUEST_METHOD'] = 'GET'; $_POST = ['operation' => 'purge'];
@@ -63,13 +63,13 @@ check(strpos($isolated, 'foreign-plugin-notice') === false && strpos($isolated, 
 check(isset($transients['wsc_notice_1'], $transients['webuzo_site_cache_notice_2']), 'Foreign and other-user notices are preserved');
 $toolbar = new class { public $nodes = []; public function add_node($n) { $this->nodes[$n['id']] = $n; } };
 \WebuzoSiteCache\Plugin::bar($toolbar);
-$node = $toolbar->nodes['webuzo-site-cache-purge'];
-check($node['parent'] === 'webuzo-site-cache' && strpos($node['title'], '>Clear Cache</button>') !== false, 'Clear Cache dropdown action');
+$node = $toolbar->nodes['clear-nginx-for-webuzo-purge'];
+check($node['parent'] === 'clear-nginx-for-webuzo' && strpos($node['title'], '>Clear Cache</button>') !== false, 'Clear Cache dropdown action');
 check(strpos($node['title'], 'method="post"') !== false && strpos($node['title'], 'test-toolbar-nonce') !== false && !isset($node['href']), 'Toolbar uses POST and nonce');
 $styles = []; $toolbar_visible = true;
 \WebuzoSiteCache\Plugin::styles();
-check(count($styles) === 1 && $styles[0][1] === 'https://www.example.test/wp-content/plugins/webuzo-site-cache/assets/admin-bar.css', 'Styles use the main plugin path');
-check($styles[0][2] === ['admin-bar'] && $styles[0][3] === '0.5.3', 'Toolbar styles declare dependency and cache version');
+check(count($styles) === 1 && $styles[0][1] === 'https://www.example.test/wp-content/plugins/clear-nginx-for-webuzo/assets/admin-bar.css', 'Styles use the main plugin path');
+check($styles[0][2] === ['admin-bar'] && $styles[0][3] === '0.5.4', 'Toolbar styles declare dependency and cache version');
 foreach (['visitor', 'hidden', 'multisite'] as $case) {
     $styles = []; $authorized = $case !== 'visitor'; $toolbar_visible = $case !== 'hidden'; $multisite = $case === 'multisite';
     \WebuzoSiteCache\Plugin::styles(); check($styles === [], 'No unnecessary styles: ' . $case);
@@ -84,4 +84,10 @@ check(!isset($options[\WebuzoSiteCache\Plugin::OPTION]), 'Legacy broad API crede
 check($notice['type'] === 'warning' && strpos($notice['text'], 'Revoke') !== false, 'Migration explains separate Webuzo key revocation');
 ob_start(); \WebuzoSiteCache\Plugin::page(); $html = ob_get_clean();
 check(strpos($html, 'fake-legacy-ciphertext') === false, 'Legacy credential never rendered');
+try {
+    include __DIR__ . '/../clear-nginx-for-webuzo/clear-nginx-for-webuzo.php';
+    throw new RuntimeException('Duplicate installation was loaded');
+} catch (RuntimeException $error) {
+    check(strpos($error->getMessage(), 'HTTP 409: Deactivate the previous') === 0, 'Duplicate active implementation rejected before redeclaring classes');
+}
 echo json_encode(['passed' => count($checks), 'checks' => $checks], JSON_PRETTY_PRINT) . "\n";

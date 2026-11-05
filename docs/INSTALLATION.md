@@ -35,7 +35,9 @@ The refresh command is fixed: GNU `timeout` permits 45 seconds followed by a two
 
 ## WordPress administrator
 
-Install the companion WordPress ZIP. There are no connection credentials to paste or transport settings. Open **Tools → Webuzo Site Cache**, test the connection, then clear cache. Every site sharing the hosting account is affected.
+When upgrading from **Webuzo Site Cache**, deactivate that old WordPress plugin before activating **Clear Nginx for Webuzo**. The new package uses `clear-nginx-for-webuzo/clear-nginx-for-webuzo.php`; WordPress treats it as a different plugin identity. Install and activate the new ZIP, test the connection, then delete the inactive old WordPress copy. No account credential rotation or panel reconfiguration is required for this rename. The new bootstrap rejects activation if the previous implementation is already loaded, and never deactivates another plugin automatically.
+
+Install the companion WordPress ZIP. There are no connection credentials to paste or transport settings. Open **Tools → Clear Nginx for Webuzo**, test the connection, then clear cache. Every site sharing the hosting account is affected.
 
 The PHP process must run under its account UID and be able to read its provisioned credential and connect to `127.0.0.1:2002`. Missing credentials, blocked sockets or a disabled companion plugin fail closed. There is no automatic API fallback.
 

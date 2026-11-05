@@ -1,10 +1,10 @@
-=== Webuzo Site Cache ===
+=== Clear Nginx for Webuzo ===
 Contributors: orloxgr
 Tested up to: 7.1
 Tags: webuzo, nginx, cache, purge
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 0.5.3
+Stable tag: 0.5.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -36,12 +36,15 @@ This connection remains on the hosting server. The plugin does not load remote s
 1. Hosting administrator reviews the source and installation/security documentation.
 2. Upload and activate Webuzo Clean Nginx in Webuzo Admin > Plugins.
 3. Upload and activate the WordPress ZIP.
-4. Open Tools > Webuzo Site Cache and Test connection.
+4. Open Tools > Clear Nginx for Webuzo and Test connection.
 5. Clear Cache. Every site in the account is affected.
 
 The companion Webuzo plugin synchronizes enrollment automatically every ten minutes. New accounts become eligible when native cache/proxy is enabled. Existing credentials and cooldowns are preserved. Busy/failed runs retry at a later scheduled cycle. Deactivate/reactivate only to rotate all credentials or upgrade. Unsupported/missing credentials fail closed; no API fallback exists.
 
 == Upgrade Notice ==
+= 0.5.4 =
+Renamed to Clear Nginx for Webuzo. Deactivate the previous Webuzo Site Cache plugin before activating this package; the plugin folder and main file now use clear-nginx-for-webuzo.
+
 = 0.5.3 =
 Uses a full plugin-specific prefix for temporary notices and documents the local Webuzo connection and request data.
 
@@ -55,6 +58,9 @@ Adds a root-owned enrollment cron every ten minutes. It never clears cache, has 
 Replaces the custom root daemon with Webuzo's native clear command and removes general API compatibility. An administrator visit removes old saved API settings. Revoke any previous broad account API key separately in Webuzo; deleting its saved copy does not revoke it.
 
 == Changelog ==
+= 0.5.4 =
+New display name, matching slug/text domain/package and duplicate-installation guard. Existing account credentials and notice settings are preserved.
+
 = 0.5.3 =
 Unique notice keys, explicit local-connection documentation and WordPress debug-mode verification. Existing notices expire within two minutes.
 

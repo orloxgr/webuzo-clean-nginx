@@ -1,8 +1,8 @@
-#wpadminbar .wsc-cache-form {
+#wpadminbar .clear-nginx-cache-form {
 	margin: 0;
 }
 
-#wpadminbar .wsc-cache-button {
+#wpadminbar .clear-nginx-cache-button {
 	display: block;
 	width: 100%;
 	padding: 0;
@@ -15,7 +15,7 @@
 	cursor: pointer;
 }
 
-#wpadminbar .wsc-cache-button:focus-visible {
+#wpadminbar .clear-nginx-cache-button:focus-visible {
 	outline: 2px solid currentColor;
 	outline-offset: 2px;
 }
