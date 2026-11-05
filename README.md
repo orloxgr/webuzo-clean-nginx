@@ -1,79 +1,68 @@
 # Webuzo Clean Nginx
 
-Webuzo administrator plugin, companion WordPress plugin and local Linux service for clearing a hosting account's Nginx cache without storing a hosting API key in WordPress.
+By **Byron Iniotakis**. GPL-2.0-or-later. Version **0.5.0**, review candidate.
 
-By **Byron Iniotakis**. Licensed under GPL-2.0-or-later.
-
-> **Lab-tested release candidate:** native installation/removal, real PHP-FPM connectivity, two-account isolation and focused adversarial checks passed in an isolated Ubuntu/Webuzo lab. This is not an independent penetration test or a guarantee of security on every host. See [test scope and limitations](docs/SECURITY-REVIEW.md).
+A Webuzo administrator plugin and companion WordPress plugin for clearing a hosting account's Nginx cache using **Webuzo's existing privileged backend and native clear command**.
 
 ## How it works
 
-WordPress connects to a fixed Unix socket. Linux supplies the PHP process's actual UID through `SO_PEERCRED`. A root-owned registry maps that UID to its approved hosting account. The service accepts only `status`, `preview` and `purge`; callers cannot supply an account, domain, filesystem path or shell command.
+1. The hosting administrator activates the Webuzo plugin. It provisions a random signing credential for each eligible account.
+2. WordPress reads only its own credential from a root-owned file outside the websites. No panel password or general Webuzo API key is needed.
+3. WordPress signs a short request to the existing local end-user panel on `127.0.0.1:2002`.
+4. The active Webuzo plugin handles one dedicated action, validates the signature, timestamp, nonce and account identity, and selects the account from its root-only registry.
+5. The existing root PHP backend runs the fixed native command:
 
-**Clearing affects every website in the same hosting account.** All processes sharing its Unix UID share purge authority. A compromised site can clear that account's cache within the service's rate limits. Other access available to PHP under its normal filesystem permissions is outside this service's scope.
+   ```sh
+   /usr/local/emps/bin/php /usr/local/webuzo/cli.php --clear_cache --users=ACCOUNT
+   ```
 
-The service recognizes Nginx v5 x86-64 cache files using the `levels=1:2` layout under `/var/webuzo-data/nginx_proxy_cache/ACCOUNT`. It uses directory file descriptors and no-follow opens, skips unknown formats, symlinks and hardlinks, and unlinks recognized cache files without removing directories. It does not execute a shell or call the Webuzo API.
+**All websites in the hosting account are affected.** The request cannot contain an account name, path, domain, command or uploaded file. The only operations are `status` and `purge`.
 
-## Requirements
-
-- WordPress 6.0+; PHP 7.4+ with Unix stream sockets; single-site installations.
-- Hosting administrator access for one-time service installation on each server.
-- Linux, systemd and Python 3, with a separate Unix UID per hosting account and a supported Webuzo Nginx cache layout.
-- PHP restrictions must permit access to the service socket.
-
-The plugin alone cannot bypass filesystem permissions on a server where the provider has not installed a suitable purge service. Other hosting providers must install and enroll the service themselves.
+The native operation deletes cache contents from disk; this is not an Nginx HTTP `PURGE` module. The plugin delegates that operation to Webuzo. It does not have its own cache-file scanner/deleter, persistent purge daemon, cron, timer, sudo rule or setuid helper. It does not patch Webuzo core or Nginx/PHP configuration.
 
 ## Installation
 
-Read **[the administrator installation and removal guide](docs/INSTALLATION.md)** before activation. The native Webuzo plugin installs only its own service/code/registry; it does not patch Webuzo, Nginx or PHP configuration or restart those services. Its lifecycle uses the [official Webuzo plugin interface](https://www.webuzo.com/docs/developers/plugins/).
+Read [installation and removal](docs/INSTALLATION.md) and [security scope](docs/SECURITY-REVIEW.md).
 
-1. Build the packages with `python scripts/build.py`.
-2. In **Webuzo Admin → Plugins → Installed Plugins → Add New**, upload `webuzo-clean-nginx-0.4.0-public-review.zip` and activate it. Open **Nginx Cache** to check installation status.
-3. Upload `webuzo-site-cache-0.4.0-public-review.zip` to WordPress, activate it and open **Tools → Webuzo Site Cache**.
-4. Select **Local cache service**, save and **Test connection**.
-5. Optionally preview the cache. Wait 10 seconds between previews or purges.
-6. Use **Clear Cache → Clear Cache** in the toolbar, or the settings-page button.
+1. Build with `python scripts/build.py`.
+2. Upload `webuzo-clean-nginx-0.5.0-public-review.zip` in **Webuzo Admin → Plugins → Installed Plugins → Add New**, then activate it.
+3. Upload `webuzo-site-cache-0.5.0-public-review.zip` in WordPress and activate it.
+4. Open **Tools → Webuzo Site Cache → Test connection**.
+5. Use **Clear Cache → Clear Cache** in the administrator toolbar, or the settings-page button.
 
-Activation enrolls existing eligible Unix accounts that have native Nginx cache directories. After adding accounts or enabling their cache, deactivate/reactivate the Webuzo plugin to rebuild enrollment. Deactivation removes the installed broker, unit and registry; cache data is preserved. The plugin directory, installation log and small status/lock files remain. A manual plan-first installer is also available in the separate service bundle.
+Wait 2 seconds between requests and 10 seconds between purges. WordPress requires `manage_options`, POST and an operation-specific nonce. The account-wide warning remains visible; there is no confirmation checkbox or filesystem preview.
 
-WordPress actions require `manage_options`, POST and a nonce. The scope warning remains visible; there is no purge confirmation checkbox. Manual purges only; no multisite support or automatic purging.
+Account enrollment is a snapshot of eligible native accounts with cache directories and private primary groups. Deactivate/reactivate after creating accounts or enabling cache. Existing account identity and Webuzo creation metadata are checked on every request; a deleted/recreated account cannot inherit an old capability merely by reusing its Unix UID. No automatic account-reconciliation cron is installed.
 
-## Security boundaries and limits
+## Requirements and limits
 
-The broker is root-owned and runs with a restricted systemd unit. The socket accepts local connections, but Linux UID credentials and explicit account enrollment determine authorization. No API key or shared secret is needed in local mode. The broker rejects root and unenrolled callers and checks the account name and primary GID against passwd on each request.
+- Tested on Webuzo **4.9.1**, Ubuntu **24.04**, native Nginx caching, panel PHP **7.4**, and WordPress PHP **8.3**.
+- WordPress 6.0+, PHP 7.4+ with POSIX, hashing and TCP stream sockets; single-site WordPress only.
+- The existing end-user panel must listen locally on port 2002. The active-plugin loading stage and native CLI must match the tested Webuzo behavior.
+- Linux hosting accounts need separate UIDs and private primary groups. Shared groups are not enrolled.
+- The hosting administrator installs the Webuzo plugin once per server. Customers do not need root or SSH; providers on other servers must install the companion plugin themselves.
+- Python 3 is needed only for native activation/deactivation. GNU `timeout` bounds native child execution. No packages are installed automatically.
 
-The privileged Webuzo panel and its system identity are part of the trusted host boundary. Native `/usr/local/webuzo` group-write access is accepted only for a system `webuzo` group containing no ordinary tenant. The broker permits the native system `webuzo` owner of `/var/webuzo-data`; other cache-base ancestors must be root owned and not group/world writable. Hosting tenants must never have membership in the privileged panel group.
+Requests and responses are authenticated with HMAC-SHA256. Only a public random credential identifier and signature are sent, never the signing secret. The loopback transport uses the existing HTTP panel; it is not encrypted. Fresh nonces, expiry and signed responses prevent accepting a forged or replayed result.
 
-Limits include one active scan per account, a 10-second cooldown, 8 workers, 512-byte requests, a 2-second total request-read deadline, and 100,000 visited entries / 15 seconds per scan. The unit limits CPU, memory, tasks, address families, capabilities and filesystem access.
+A stolen account credential permits connection checks and cache clears for that account from the local host. The compromised account already controls its own PHP and sites. Other accounts' credentials and the root registry must remain inaccessible. The bridge is new security-sensitive code running inside Webuzo's existing root backend; using a native command does not make that code unprivileged.
 
-Large or unsupported caches can produce incomplete scans. Repeated scans are not guaranteed to make progress past unchanged unsupported entries. Concurrent Nginx requests can replace or rebuild cache files. A completed scan is not an atomic transaction that freezes the cache. Root broker code remains security-sensitive; these controls do not guarantee protection against every attack or denial of service.
+The UI confirms that the native command completed normally. It does not claim independently verified deletion of every cache entry: Webuzo can suppress internal filesystem errors, and live traffic can refill cache. Validate actual cache behavior on each deployment and after Webuzo upgrades.
 
-## Optional Webuzo API compatibility
+## Upgrading from earlier candidates
 
-API mode must be selected explicitly. **There is no automatic fallback to an account API key.** Existing settings without a transport select local mode. Previously saved encrypted keys remain stored until removed, but local mode does not read or send them. Remove the saved key and revoke it separately in Webuzo when retiring API mode.
+Version 0.5.0 replaces the previous filesystem broker. Activation retires only the previous plugin's known daemon, unit and registry. WordPress no longer offers general API compatibility or reads/decrypts saved API credentials. On an administrator visit it removes the old plugin settings and, when a saved key existed, displays a reminder to **revoke that key separately in Webuzo**. Database backups may still contain old settings.
 
-Compatibility mode uses the HTTPS end-user API, checks domain membership and requires native purge success confirmation. TLS verification stays enabled; redirects are refused. Credentials are encrypted with WordPress salts. This protects against a database-only disclosure, while compromised PHP with access to the salts can recover the key. Ordinary account API keys can authorize actions beyond cache clearing; an IP restriction does not narrow those actions.
-
-## Tests
+## Verification
 
 ```sh
-php tests/api-contract.php
-php tests/local-client-contract.php
-python3 -I -B tests/service-contract.py
-python3 -I -B tests/service-nginx-integration.py
+php tests/native-bridge-contract.php
+php tests/native-client-contract.php
+php tests/wordpress-contract.php
 ```
 
-Service tests require Linux and a non-root test user with UID ≥1000. Integration also needs Nginx and PHP on PATH, or `NGINX_BINARY` and `PHP_BINARY` set to executable paths. It creates disposable fixtures and loopback-only listeners; it does not invoke the production service entry point or read live cache/configuration.
+These portable protocol/client/WordPress stub suites contain 29, 14 and 24 assertions. They do not clear live cache. Native deployment acceptance also exercises actual WordPress HTTP/PHP-FPM, two hosting accounts, filesystem attacks, native plugin lifecycle and credential revocation. See the report for the precise tested scope. These are developer-run checks, not an independent penetration test.
 
-The portable suites cover 39 WordPress/API checks, 8 local-client checks, 20 Linux broker tests and 18 real Nginx/PHP/socket integration assertions. Their integration fixture uses one connecting UID. Separate deployment acceptance on the native lab service exercised two real hosting UIDs, real WordPress admin HTTP requests and PHP-FPM, lifecycle removal/reactivation and filesystem/protocol attacks. Private deployment harnesses, credentials and environment details are intentionally excluded; the public report describes their scope without identifying infrastructure.
+## Public packages
 
-## Repository contents
-
-- `webuzo-clean-nginx/`: native Webuzo administrator plugin, version 0.4.0.
-- `webuzo-site-cache/`: WordPress plugin, version 0.4.0.
-- `server/`: broker, version 0.2.0, native lifecycle, plan-first installer and systemd unit.
-- `docs/`: generic administrator instructions.
-- `tests/`: isolated contracts and Linux integration tests.
-- `scripts/build.py`: creates packages from an explicit source allowlist.
-
-Local deployment reports, screenshots, credentials, customer configuration and historical packages are excluded. Generated packages belong in ignored `dist/` and contain only allowlisted public sources.
+`scripts/build.py` uses explicit source allowlists and creates deterministic ZIPs with a checksum manifest inside each plugin folder. Local environments, deployment harnesses, credentials and infrastructure details are excluded. Generated packages belong in ignored `dist/`.

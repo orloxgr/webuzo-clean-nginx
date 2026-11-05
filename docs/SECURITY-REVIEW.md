@@ -1,36 +1,49 @@
-# Focused security and deployment review
+# Version 0.5.0 review scope
 
-Date: 2026-11-05. Plugins: 0.4.0; broker: 0.2.0.
+This is a developer-run review candidate, not an independent penetration test or a claim that a privileged plugin cannot contain vulnerabilities.
 
-These are developer-run checks in an isolated VMware lab, not an independent penetration test, certification or guarantee of absolute security. No production server was used. Deployment credentials, domains, addresses, account names, snapshots and private harnesses are excluded from this repository and packages.
+## Intended boundary
 
-## Environment and evidence
+A compromised WordPress may request native cache clears for its hosting account. The bridge must not let it select another account, upload/write arbitrary content, delete arbitrary paths or execute arbitrary commands. Websites sharing one Unix account intentionally share this purge authority. Existing access available through their normal filesystem permissions is outside this plugin's boundary.
 
-Ubuntu 24.04 LTS, Webuzo 4.9.1, WordPress 7.1.4, PHP 8.3, native Nginx/Apache reverse proxy, two actual hosting accounts with different kernel UIDs. The native Webuzo upload and activation/deactivation interface installed and removed the service. WordPress admin requests ran through the actual PHP-FPM pools and used the production root-owned socket validation, not a substituted socket or mocked UID.
+The privileged Webuzo panel, its service identity, native CLI, root configuration, Linux kernel and administrator are trusted. The native clear implementation is encoded by Webuzo and was observed through runtime tracing; it has not been fully source-audited. Reusing it transfers the cache operation to Webuzo, not all security responsibility.
 
-| Check group | Result and scope |
-| --- | --- |
-| Portable contracts | 39 WordPress/API, 8 local-client, 20 Linux broker and 18 isolated real Nginx/PHP assertions passed. Contract network calls are stubbed; isolated integration has one connecting UID. |
-| Native WordPress HTTP acceptance | 37 assertions passed, including genuine admin login, both FPM identities, scope warning, stale content after an edit, purge → MISS with the edited content, cache rebuild and an unchanged HIT in the second account. Repeated page/login assertions are included in that count. |
-| Live service adversarial tests | 38 assertions passed: root/system/unenrolled rejection; two actual allowed UIDs; 18 malformed, duplicate, oversized or override payloads; preview/cooldown; hardlinks, symlinks, FIFO, unknown files; a protected file outside cache; byte comparisons for the other account; a slow drip connection; concurrent connection burst; recovery and service liveness. |
-| Additional access checks | 10 assertions passed: real subscriber settings/purge rejection; no subscriber toolbar; real administrator dropdown; ignored account/path/command injection in a legitimate purge; second-account preservation; no native admin status for unauthenticated/end-user callers; sessionless native lifecycle URL rejected. |
-| Native lifecycle | 19 assertions passed: panel removal/reactivation, socket/unit/code/registry removal, WordPress fail-closed behavior without API fallback, cache preservation, unchanged Nginx/PHP/Webuzo main PIDs, two-account enrollment, denied tenant lifecycle execution and all 598 recorded original Webuzo PHP files unchanged. |
-| Final deployment health | 7 assertions passed after a VM reboot: both actual PHP-FPM connections/frontends, broker boot enablement, all 21 installed plugin/broker files matching final package/source hashes and all 598 original Webuzo PHP hashes unchanged. |
+## Controls
 
-Host-specific harnesses and detailed output are retained privately. Counts describe test assertions and must not be interpreted as a count of discovered or eliminated vulnerability classes.
+- Dedicated plugin action in the existing root backend; only direct loopback POSTs accepted.
+- Separate 256-bit random signing secret per eligible account, outside website directories and the WordPress database. Root owns the files; only a private account primary group can read its client credential.
+- HMAC-SHA256 over the exact request and response with distinct request/response contexts. The secret is never transmitted. Client responses must echo the fresh request nonce and confirm account scope, operation and backend.
+- Exact canonical JSON schema: `v`, `op`, `id`, `ts`, `nonce`. Unknown/duplicate fields, invalid types and unsupported operations are rejected. A public credential ID maps to the account in a root-only registry.
+- Thirty-second clock allowance, persistent replay detection, two-second request cooldown and ten-second purge cooldown per account.
+- At most two native purge children globally. Native jobs are bounded by GNU timeout; the client has a total response deadline and bounded response/header parsing.
+- Account UID, name, primary GID and Webuzo UUID/creation metadata are rechecked before execution. Deleted/recreated account identities invalidate the old capability.
+- Fixed executable/arguments, controlled environment and working directory, no bridge shell interpolation. Only the validated registry account becomes `--users=ACCOUNT`. The native command itself may use a shell internally.
+- Lifecycle operations serialize against active requests. Deactivation revokes scoped credentials; reactivation provisions fresh ones. The old custom root daemon is retired.
+- WordPress actions require administrator capability, POST and an operation-specific nonce; notices are escaped. No general account API compatibility mode remains.
 
-## Fixes identified during acceptance
+## Verification
 
-- Native Webuzo has a privileged system-owned cache ancestor and a system-group-writable panel ancestor. The first strict root-only check refused installation. Explicit, narrowly scoped trust for those native service identities was added; no Webuzo ownership or permission changes were made. The root socket, registry and installed broker remain outside tenant write access.
-- A checksum manifest at the ZIP root prevented WordPress recognizing its plugin directory. Plugin manifests now live inside their single top-level plugin folder; native upload and WordPress installation both succeeded.
-- Lifecycle operations run synchronously through the native root helper and serialize on a root-owned lock. Deactivation is safe after a missing/failed first installation. Installation failures are visible through the plugin status and private log rather than a false success claim.
+Portable suites:
 
-## Boundaries and remaining coverage
+| Suite | Assertions | Scope |
+| --- | ---: | --- |
+| Native protocol | 29 | Schema, HMAC binding, account-ID substitution, malformed/extra fields, expiry, duplicate keys and registry validation |
+| WordPress native client | 14 | Fixed destination, secret not sent, response HMAC/nonce/scope validation, truncation, ambiguous headers and total deadline |
+| WordPress handler/UI | 24 | Capability, method, nonce, unsupported actions, multisite, escaping, toolbar and removal of legacy broad credentials |
 
-An enrolled compromised PHP process can purge its entire Unix hosting account within rate limits. The service does not isolate sites sharing a UID. It accepts no caller-selected account, path or executable, and has no upload/delete-account operation or TCP endpoint. This does not restrict unrelated filesystem or panel access that the compromised process already has.
+Native deployment acceptance uses an isolated Ubuntu/Webuzo environment and two real hosting accounts. It exercises account-separated credential access, signed requests through the actual panel, forged signatures, account overrides, replay/expiry, rate limits and unsupported operations. Its cache attack fixtures include symlinks to root-owned files outside cache and to the other account's cache. Outside data and the other account's cached content/inodes/owners/modes are compared after a native purge.
 
-Root, the privileged Webuzo panel/system identity, Python/systemd and the host kernel remain trusted. The native plugin inherits Webuzo's administrator/session controls. A sessionless lifecycle request was rejected in this lab; this does not constitute an audit of Webuzo's own authentication or plugin manager.
+Actual WordPress administrator HTTP forms and PHP-FPM are also exercised: warm an anonymous native cache entry, edit real content, observe the stale HIT, submit the purge form, then verify a MISS with the changed text and an unchanged HIT for the other account. Missing/forged/cross-installation nonces and unsupported WordPress operations are rejected.
 
-The service runs as root with a restricted unit, not as an unprivileged process. `ProtectSystem=strict`, `ProtectHome=yes`, the filesystem write exceptions, AF_UNIX-only sockets, capability bounds and resource settings were verified on the running unit. Supported cache parsing is limited to the documented Nginx v5 x86-64 layout. Large/unsupported caches may report incomplete scans; live Nginx requests can rebuild entries while a purge runs.
+Completed native acceptance groups contain 48 endpoint/cache/credential assertions, 35 real WordPress assertions, 19 native lifecycle assertions, 15 additional identity/concurrency/runner assertions and 3 real legacy-setting migration assertions. The runner fixtures execute inside private mount namespaces: they verify rejection of a native CLI error with exit code zero, and a bounded timeout, without changing the host's Webuzo files. All 598 original Webuzo PHP files match the pre-installation baseline. Lifecycle tests confirm credential rotation/revocation, cache preservation and unchanged Nginx/PHP/Webuzo master processes.
 
-This review does not establish compatibility with every distribution, architecture, PHP restriction, cache layout, Webuzo release or account lifecycle. It is not exhaustive fuzzing, a sustained distributed/many-UID denial-of-service study, or a comprehensive race/kernel/filesystem audit. Enrollment is a snapshot; refresh after account changes. Reuse of the exact same UID/name/GID is indistinguishable from the original identity. Each deployment needs its own two-account acceptance checks and backup/recovery plan.
+Private acceptance harnesses and deployment reports stay outside the public repository. They contain environment-specific setup. Public test sources use fake capabilities and generic examples only.
+
+## Limits
+
+- Successful execution confirms normal native command completion, not an independently audited deletion count. The CLI may suppress underlying filesystem errors or change behavior in another version. Visits can refill cache immediately.
+- Native cache clearing removes ordinary contents under the account cache root, including unrecognized files there; it does not preserve unknown files as the previous broker did. This plugin does not expose a content-write operation. Native cache poisoning risks and cache permissions are not redesigned here.
+- Scoped secrets are capabilities. A leaked secret permits local status/purge requests for its account until revoked. It cannot authenticate another Webuzo API action, but protecting each account's credential remains essential.
+- The local HTTP messages are authenticated, not encrypted. Any administrator/root compromise is outside this boundary. Processes with the same UID or credential-reading group share purge authority.
+- The endpoint is security-sensitive root PHP code. HMAC does not prevent every denial of service or substitute for an independent audit. No arbitrary-file-write operation or general command runner is intentionally provided.
+- Enrollment refresh is manual. Native account metadata/layout and active-plugin loading behavior are version-dependent; unsupported setups fail closed and require administrator review.

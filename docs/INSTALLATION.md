@@ -1,113 +1,46 @@
-# Administrator installation and removal
+# Native bridge installation and removal
 
-This candidate passed deployment acceptance and focused adversarial checks in an isolated lab. Each different host still needs its own acceptance checks. Installation requires the hosting administrator; WordPress users do not need SSH or root after their account is enrolled.
+## Hosting administrator
 
-## Native Webuzo plugin installation
+Review the source before installing a plugin that executes inside the existing privileged Webuzo backend. Build with `python scripts/build.py`; verify the ZIP checksums.
 
-Build using `python scripts/build.py`. Review the source and verify package checksums before uploading code that will run with hosting administrator privileges. In **Webuzo Admin → Plugins → Installed Plugins → Add New**, upload `webuzo-clean-nginx-0.4.0-public-review.zip`, then activate it. No SSH command is needed for this installation method. The native root helper invokes a fixed lifecycle command with no request-supplied values.
+Upload the Webuzo ZIP in **Admin → Plugins → Installed Plugins → Add New**, then activate it. The native lifecycle hooks call a fixed Python command with no request-supplied parameters. Open **Nginx Cache** to check enrollment status; verify connectivity from WordPress as well.
 
-Activation installs the broker, registry and unit listed below, enables/starts only `webuzo-cache-purge.service`, and enrolls all existing eligible Unix accounts with native cache directories. It does not enable Nginx caching itself. Check **Nginx Cache** in the Webuzo administrator menu, then verify from WordPress. Socket presence alone is not a health check. There is no privileged end-user route or HTTP purge endpoint.
+Activation writes only the plugin's configuration/state/credentials below. It enrolls existing cache accounts after checking their Unix identities, private primary groups, native Webuzo `info` metadata and cache directory. Accounts without supported metadata, isolated groups or a safe cache directory are skipped. The plugin does not enable caching.
 
-The plugin requires existing Python 3 and systemd tools; it never installs system packages. Webuzo installs its bundle under `/usr/local/webuzo/plugins/webuzo-clean-nginx/`. The lifecycle validates bundle ownership and permissions before importing its installer. The native Webuzo system group may write `/usr/local/webuzo` only if it is a system group with no members having UID ≥1000. The panel service identity is trusted; the plugin cannot defend a server whose privileged Webuzo installation is compromised.
-
-The lifecycle also creates `/var/lib/webuzo-cache-purge/` (root 0755), a root-only lifecycle lock, a root-owned 0644 summary `status.json` and `/var/log/webuzo-cache-purge-install.log` (root 0600 when created). The summary contains state/account count only. Concurrent lifecycle requests serialize on the lock. Read installation failures in the root-only log; service activity is in the system journal. A failed activation may remain marked active by Webuzo: the status page and WordPress connection test must confirm readiness.
-
-For new accounts, deleted/recreated identities or newly enabled cache directories, deactivate/reactivate to rebuild the entire enrollment snapshot. For upgrades, deactivate, upload the reviewed replacement ZIP and activate. There is no automatic enrollment hook or background update download.
-
-To remove: deactivate from Webuzo's native plugin list. This stops/disables the broker before removing its three installed files. It never clears cache, removes websites or changes other services. Own empty directories, status/lock files, installation log and the uploaded plugin bundle remain for diagnosis/reactivation. Remove only these exact leftovers if no longer needed. Never delete the Webuzo plugins directory or the cache base.
-
-The remaining command-line procedure is an alternative for administrators who prefer a reviewed plan before applying. Do not maintain a separate manual deployment alongside the native plugin: both manage the same unit/registry.
-
-## Review the service boundary
-
-The broker authenticates the actual Unix UID supplied by Linux. All websites running as that UID can clear all cache in the hosting account. There is no domain-level authorization. Callers cannot select a different account, path or command. Only `status`, `preview` and `purge` exist.
-
-The fixed cache base is `/var/webuzo-data/nginx_proxy_cache`. The supported format is Nginx v5 x86-64 with `levels=1:2`. Other layouts/formats are skipped. Scans do not remove directories. Symlinks, hardlinks, unknown entries and other devices are skipped. Concurrent filesystem activity is not an atomic transaction; Nginx can rebuild cache during a scan.
-
-Account enrollment stores UID, name and primary GID. Remove enrollment when deleting a hosting account. Recreation with the same UID/name/GID cannot be distinguished from the old identity. New accounts are not automatically enrolled.
-
-## Files, permissions and service actions
-
-| Path | Owner and mode | Purpose |
+| Path | Owner / permissions | Purpose |
 | --- | --- | --- |
-| `/usr/local/lib/webuzo-cache-purge/` | root:root 0755 when created | Code directory |
-| `/usr/local/lib/webuzo-cache-purge/webuzo_cache_purge.py` | root:root 0644 | Broker, invoked by Python |
-| `/etc/webuzo-cache-purge/` | root:root 0700 when created | Configuration directory |
-| `/etc/webuzo-cache-purge/accounts.json` | root:root 0600 | Approved UID/account/GID registry, no secrets |
-| `/etc/systemd/system/webuzo-cache-purge.service` | root:root 0644 | Unit definition |
-| `/run/webuzo-cache-purge/` | root:root 0755, runtime | Created by systemd |
-| `/run/webuzo-cache-purge/control.sock` | root:root 0666, runtime | Local socket with kernel UID authorization |
+| `/usr/local/webuzo/plugins/webuzo-clean-nginx/` | root, normal plugin directories/files | Native plugin bundle installed by Webuzo |
+| `/etc/webuzo-clean-nginx/` | root:root 0700 | Server registry directory |
+| `/etc/webuzo-clean-nginx/bridge.json` | root:root 0600 | Credential IDs, secrets and approved identities |
+| `/var/lib/webuzo-clean-nginx/` | root:root 0755 | Own state root |
+| `clients/` under that root | root:root 0711 | Traversable, not listable by accounts |
+| `clients/UID.json` | root:account-primary-group 0440 | Account's scoped credential |
+| `state/` | root:root 0700 | Nonces, cooldowns and lock files |
+| `state/ID.json`, `state/slot-N` | root:root 0600 | Per-account state and two global job slots |
+| `lifecycle.lock` | root:root 0600 | Serializes enrollment/removal against active bridge requests |
+| `status.json` | root:root 0644 | State and enrolled-account count only |
 
-Socket mode 0666 permits local connections; it does not grant purge authority. The root-owned parent prevents tenants replacing the socket. Unenrolled callers are rejected before their request is read. The WordPress client also checks the root ownership of the runtime directory and socket.
+The panel must retain its existing loopback HTTP listener on port 2002. The bridge accepts only direct loopback requests with its own narrow HMAC authentication. It does not create a panel login session, accept an ordinary API key, or authenticate access to other actions.
 
-The unit runs as root to reach Nginx-owned cache without changing its permissions. It bounds capabilities to `CAP_DAC_OVERRIDE` and `CAP_DAC_READ_SEARCH`, uses `ProtectSystem=strict`, `ProtectHome=yes`, private temporary storage/devices, AF_UNIX-only sockets and syscall restrictions. Writable exceptions cover the cache base and this service's runtime directory. Limits: 128 MB memory, 25% of one CPU and 32 tasks. Review the unit itself for the complete settings.
+The installer validates the plugin bundle and its ancestors. Native root:webuzo group-write permissions on `/usr/local/webuzo` are accepted only for a system group with no ordinary tenant members. The privileged panel's identity and native account metadata are trusted host components.
 
-The service logs account/UID/operation/counters to the systemd journal under its existing retention policy. It does not log cache contents or API keys. Python runs with `-I -B`. Enabling the unit creates the normal boot-target symlink.
+No Webuzo core, Nginx configuration, PHP configuration, account cache permissions, sudoers or cron files are changed. No additional daemon or timer is installed. Existing Nginx/PHP/Webuzo services are not restarted. Upgrading from the previous candidate stops/disables only `webuzo-cache-purge.service` and removes its three known installed code/registry/unit files.
 
-## Prepare and inspect
+## WordPress administrator
 
-Check that no older installation exists. If it does, back up its code, registry and unit and review an upgrade plan first: the installer replaces files and the **entire account list**, without backup or merging. Each file replacement is atomic; the overall multi-file installation is not. Partial failure may need manual removal or restoration.
+Install the companion WordPress ZIP. There are no connection credentials to paste or transport settings. Open **Tools → Webuzo Site Cache**, test the connection, then clear cache. Every site sharing the hosting account is affected.
 
-Build with `python scripts/build.py`. Transfer the service bundle to a root-owned review directory outside document roots, for example `/root/webuzo-cache-purge-review`, mode 0700. Verify its SHA256 against the build output, inspect the archive members before extraction, then inspect the code and unit. Never execute an installer or source still writable by a hosting tenant.
+The PHP process must run under its account UID and be able to read its provisioned credential and connect to `127.0.0.1:2002`. Missing credentials, blocked sockets or a disabled companion plugin fail closed. There is no automatic API fallback.
 
-From the reviewed directory, using a real account name in place of the example:
+Earlier plugin API settings are removed on an administrator visit. If those settings held an account API key, revoke it in Webuzo separately; removing a saved copy does not invalidate that key or copies in old database backups.
 
-```sh
-python3 -I -B server/install.py --account example_account
-```
+## Refresh, upgrade and remove
 
-This is plan-only: no directory/file/service changes. It validates the account and existing cache directory and prints the UID/GID mapping, destinations, modes and service commands. Accounts must have UID ≥1000. Confirm all output before applying.
+Deactivate/reactivate to rebuild enrollment after adding accounts, changing identities/groups or enabling cache. Deactivation revokes the registry and removes client credentials and account nonce files. Reactivation generates fresh keys, automatically read by WordPress. Runtime checks also compare Webuzo's UUID/creation metadata so old credentials fail after account recreation, even if the UID/name/GID are reused.
 
-## Apply only the reviewed plan
+For an upgrade: deactivate, upload the reviewed replacement ZIP and activate. Confirm both the native status page and actual WordPress behavior. Revalidate after Webuzo upgrades because the native CLI and plugin loading sequence are external dependencies.
 
-As root:
+Deactivation never clears cache or removes websites. Own empty directories, the lifecycle lock, two slot files, disabled status and uploaded bundle remain. The disabled plugin no longer handles bridge requests. Remove only these exact plugin-owned leftovers if needed.
 
-```sh
-python3 -I -B server/install.py --account example_account --apply
-```
-
-The installer verifies Python/systemd tools, runs `systemd-analyze verify`, checks destination ancestors are root-owned and not tenant-writable or symlinks, creates its own missing directories, and writes the three files listed above. It does not chmod existing directories or install system packages. It then runs:
-
-```sh
-systemctl daemon-reload
-systemctl enable webuzo-cache-purge.service
-systemctl restart webuzo-cache-purge.service
-systemctl is-active --quiet webuzo-cache-purge.service
-```
-
-No Nginx, Apache, PHP-FPM or Webuzo restart occurs. The installer does not change their configuration, cache ownership/permissions, sudoers, cron, firewall, SSH or API keys. Starting the service does not scan or clear cache.
-
-For selected accounts, repeat `--account NAME`. After a successful pilot, `--all-webuzo-accounts` discovers existing eligible Unix accounts with cache directories. Review plan-only output first; add `--apply` separately. Each run replaces the registry with exactly that selection. The service reloads it on restart. Future accounts require a new enrollment plan.
-
-## Acceptance checks
-
-1. Check `systemctl status webuzo-cache-purge.service`, `journalctl -u webuzo-cache-purge.service`, ownership/modes, sandbox behavior and absence of a TCP listener.
-2. Install the WordPress plugin, choose Local cache service and Test connection from the actual PHP-FPM runtime. If PHP restrictions block the socket, investigate and review a specific configuration change before making it. The installer does not relax PHP restrictions.
-3. Preview cache and inspect counters. Investigate errors or unsupported formats before proceeding. Wait 10 seconds before another scan.
-4. Arrange an authorized account-wide pilot purge. Confirm a previously cached anonymous page goes HIT → MISS, then returns to HIT. Account cache loss can temporarily increase backend load.
-5. Use two distinct real hosting UIDs to test isolation, and an unenrolled UID to check rejection. Two domains sharing one UID do not prove account isolation.
-
-Portable automated integration uses disposable account directories under one test UID. Separate native deployment acceptance in an isolated lab verified two real callers, PHP-FPM, lifecycle removal and the privileged service sandbox. Review [the exact test scope](SECURITY-REVIEW.md); this does not replace acceptance on your host or an independent security audit.
-
-Limits include 100,000 entries or 15 seconds per scan, one scan per UID, 10-second cooldown, 8 workers and 512-byte requests with a 2-second read deadline. Incomplete scans are reported. Repeating scans over very large caches might revisit the same unsupported prefix. A compromised enrolled tenant can repeatedly purge its own account within these limits; no absolute DoS guarantee is offered.
-
-## WordPress credentials and compatibility
-
-Local mode sends no hosting key, username or panel URL. No automatic API fallback occurs. Existing encrypted API settings remain until removed but are unused locally. Removing a stored key does not revoke it in Webuzo; revoke obsolete keys separately. Explicit API compatibility uses broader account credentials and has different risks, described in the README.
-
-## Remove the service
-
-Disable the WordPress plugin or change its connection method first. As root, verify the exact paths before removing only this installation:
-
-```sh
-systemctl disable --now webuzo-cache-purge.service
-rm -- /etc/systemd/system/webuzo-cache-purge.service
-rm -- /usr/local/lib/webuzo-cache-purge/webuzo_cache_purge.py
-rm -- /etc/webuzo-cache-purge/accounts.json
-rmdir -- /usr/local/lib/webuzo-cache-purge
-rmdir -- /etc/webuzo-cache-purge
-systemctl daemon-reload
-systemctl reset-failed webuzo-cache-purge.service
-```
-
-Systemd normally removes its runtime directory on stop. If something remains, inspect it and remove only this service's socket and empty runtime directory. Use no recursive deletion. `rmdir` deliberately fails if unexpected files remain; inspect them. `reset-failed` may report the removed unit no longer exists. Removal does not delete site files, cache directories or Webuzo configuration. Previously purged cache is rebuilt through visits, not restored by uninstalling.
+There is no account-reconciliation cron. New eligible accounts remain unavailable until enrollment is refreshed; stale identities fail closed. Automatic reconciliation is separate future work.
