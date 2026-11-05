@@ -31,11 +31,10 @@ The JSON body contains the protocol version, requested operation, random account
 This connection remains on the hosting server. The plugin does not load remote scripts, styles or images, or send analytics to the plugin author. The provider provisions credentials automatically; WordPress administrators do not need to edit plugin files or paste credentials. This service integration is self-hosted; it is not a subscription to a service operated by the plugin author. See the companion source and installation requirements at https://github.com/orloxgr/webuzo-clean-nginx.
 
 == Installation ==
-1. Hosting administrator reviews the source and installation/security documentation.
-2. Upload and activate Webuzo Clean Nginx in Webuzo Admin > Plugins.
-3. Upload and activate the WordPress ZIP.
-4. Open Tools > Clear Nginx for Webuzo and Test connection.
-5. Clear Cache. Every site in the account is affected.
+1. The hosting administrator installs and activates Webuzo Clean Nginx in Webuzo Admin > Plugins.
+2. Upload and activate the WordPress ZIP.
+3. Open Tools > Clear Nginx for Webuzo and click Test connection.
+4. Click Clear Cache. Every site in the hosting account is affected.
 
 The companion Webuzo plugin synchronizes enrollment automatically every ten minutes. New accounts become eligible when native cache/proxy is enabled. Existing credentials and cooldowns are preserved. Busy/failed runs retry at a later scheduled cycle. Deactivate/reactivate only to rotate all credentials or upgrade. Unsupported/missing credentials fail closed; no API fallback exists.
 
