@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /** WordPress administrator UI and authorized manual actions. */
 final class Plugin {
 
-	const VERSION = '0.5.7';
+	const VERSION = '1.0.0';
 	const SLUG    = 'clear-nginx-for-webuzo';
 
 	/**

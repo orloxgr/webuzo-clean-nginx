@@ -4,7 +4,7 @@
 
 Review the source before installing a plugin that executes inside the existing privileged Webuzo backend. Build with `python scripts/build.py`; verify the ZIP checksums.
 
-Upload the Webuzo ZIP in **Admin → Plugins → Installed Plugins → Add New**, then activate it. The native lifecycle hooks call a fixed Python command with no request-supplied parameters. Open **Nginx Cache** to check enrollment status; verify connectivity from WordPress as well.
+Upload the Webuzo ZIP in **Admin → Plugins → Installed Plugins → Add New**, then activate it. The native lifecycle hooks call a fixed Python command with no request-supplied parameters. Open **Clean Nginx Cache Wordpress Connector** to check enrollment status; verify connectivity from WordPress as well.
 
 Activation writes only the plugin's configuration/state/credentials below. It enrolls existing cache accounts after checking their Unix identities, private primary groups, native Webuzo `info` metadata and cache directory. Accounts without supported metadata, isolated groups or a safe cache directory are skipped. The plugin does not enable caching.
 
@@ -45,8 +45,8 @@ The PHP process must run under its account UID and be able to read its provision
 
 1. Deactivate the WordPress development copy first. Remove that WordPress plugin through its Plugins screen if replacing a differently named folder.
 2. In Webuzo Admin > Plugins, **deactivate the old Webuzo plugin before deleting its uploaded bundle**. This allows its existing removal hook to run. For the old service-based candidate, deactivation stops/disables `webuzo-cache-purge.service` and removes its known installed service/code/registry files. For the native bridge candidate, deactivation removes its enrollment cron and revokes its account credentials.
-3. Upload `webuzo-clean-nginx-0.5.7-public-review.zip`, activate it, and check Nginx Cache for `ready`, eligible account count and the ten-minute enrollment schedule.
-4. Install and activate `clear-nginx-for-webuzo-0.5.7-public-review.zip` in WordPress. Reload the dashboard to get forms using the new action/nonce identifiers, then test connection and clear cache.
+3. Upload `webuzo-clean-nginx-0.5.8.zip`, activate it, and check Clean Nginx Cache Wordpress Connector for `ready`, eligible account count and the ten-minute enrollment schedule.
+4. Install and activate `clear-nginx-for-webuzo-1.0.0.zip` in WordPress. Reload the dashboard to get forms using the new action/nonce identifiers, then test connection and clear cache.
 
 If the separate old purge service was installed without a Webuzo plugin, or its known unit remains, activating the new Webuzo plugin also checks for `/etc/systemd/system/webuzo-cache-purge.service`. When present, it validates the three known old installed files as trusted root-owned regular files, runs `systemctl disable --now webuzo-cache-purge.service`, removes only `/usr/local/lib/webuzo-cache-purge/webuzo_cache_purge.py`, `/etc/webuzo-cache-purge/accounts.json` and that unit file when present, then runs `systemctl daemon-reload`. Unsafe files stop installation rather than broadening cleanup. It does not search for or remove arbitrary services, websites or cache contents. Other old empty directories/logs/socket leftovers are not recursively deleted.
 

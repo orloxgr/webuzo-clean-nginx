@@ -1,4 +1,5 @@
 """Build public packages from explicit source lists; never copy local reports."""
+import argparse
 import hashlib
 import json
 from pathlib import Path
@@ -41,27 +42,36 @@ def package(destination, sources, manifest_path='SHA256SUMS.txt'):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--only', choices=('wordpress', 'webuzo', 'all'), default='all',
+                        help='Build one plugin or both (default: all).')
+    selected = parser.parse_args().only
     source = (ROOT / PLUGIN[0]).read_text(encoding='utf-8')
     assert not re.search(r'^ \* Update URI:', source, re.M), 'WordPress.org packages must not override the update URI.'
     version = re.search(r'^ \* Version: ([0-9.]+)$', source, re.M).group(1)
-    assert json.loads((ROOT / 'webuzo-clean-nginx/info.json').read_text())['version'] == version
-    assert '\nVersion: ' + version + '\n' in (ROOT / NATIVE[0]).read_text()
+    native_version = json.loads((ROOT / 'webuzo-clean-nginx/info.json').read_text())['version']
+    assert '\nVersion: ' + native_version + '\n' in (ROOT / NATIVE[0]).read_text()
     output = ROOT / 'dist'
     output.mkdir(exist_ok=True)
-    plugin = output / ('clear-nginx-for-webuzo-' + version + '-public-review.zip')
-    native = output / ('webuzo-clean-nginx-' + version + '-public-review.zip')
+    plugin = output / ('clear-nginx-for-webuzo-' + version + '.zip')
+    native = output / ('webuzo-clean-nginx-' + native_version + '.zip')
+    built = []
     plugin_sources = {name: name for name in PLUGIN}
     plugin_sources['clear-nginx-for-webuzo/LICENSE'] = 'LICENSE'
-    package(plugin, plugin_sources, 'clear-nginx-for-webuzo/SHA256SUMS.txt')
+    if selected in ('wordpress', 'all'):
+        package(plugin, plugin_sources, 'clear-nginx-for-webuzo/SHA256SUMS.txt')
+        built.append(plugin)
     native_sources = {name: name for name in NATIVE}
     for name in ('lifecycle.py',):
         native_sources['webuzo-clean-nginx/service/' + name] = 'server/' + name
     native_sources['webuzo-clean-nginx/LICENSE'] = 'LICENSE'
     for name in ('README.md', 'docs/INSTALLATION.md', 'docs/SECURITY-REVIEW.md', 'docs/WORDPRESS-QUALITY.md'):
         native_sources['webuzo-clean-nginx/' + name] = name
-    package(native, native_sources, 'webuzo-clean-nginx/SHA256SUMS.txt')
+    if selected in ('webuzo', 'all'):
+        package(native, native_sources, 'webuzo-clean-nginx/SHA256SUMS.txt')
+        built.append(native)
     checksums = ''.join(hashlib.sha256(path.read_bytes()).hexdigest() + '  ' + path.name + '\n'
-                        for path in (plugin, native))
+                        for path in built)
     (output / 'PUBLIC-SHA256SUMS.txt').write_text(checksums, encoding='utf-8')
     print(checksums, end='')
 

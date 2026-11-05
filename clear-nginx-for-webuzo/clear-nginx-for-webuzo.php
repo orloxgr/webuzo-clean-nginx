@@ -3,7 +3,7 @@
  * Plugin Name: Clear Nginx for Webuzo
  * Plugin URI: https://github.com/orloxgr/webuzo-clean-nginx
  * Description: Clear your hosting account's Nginx cache from the WordPress dashboard or toolbar.
- * Version: 0.5.7
+ * Version: 1.0.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Byron Iniotakis

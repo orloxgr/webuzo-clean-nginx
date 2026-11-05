@@ -1,7 +1,7 @@
 <?php
 /*
-Plugin Name: Webuzo Clean Nginx
-Version: 0.5.7
+Plugin Name: Clean Nginx Cache Wordpress Connector
+Version: 0.5.8
 Description: Account-scoped WordPress requests using Webuzo's native cache clear command.
 Author: Byron Iniotakis
 License: GPL-2.0-or-later
@@ -51,14 +51,14 @@ function wcn_state() {
 add_filter('admin_menu', 'wcn_admin_menu', 10, 1);
 function wcn_admin_menu($menu) {
     global $globals;
-    $menu['webuzo-clean-nginx'] = ['name' => 'Nginx Cache', 'href' => $globals['ind'] . 'act=webuzo-clean-nginx', 'icon' => 'fas fa-broom'];
+    $menu['webuzo-clean-nginx'] = ['name' => 'Clean Nginx Cache Wordpress Connector', 'href' => $globals['ind'] . 'act=webuzo-clean-nginx', 'icon' => 'fas fa-broom'];
     return $menu;
 }
 admin_act('webuzo-clean-nginx', 'wcn_admin');
 function wcn_admin() { theme_for_act('wcn_admin_theme', 'webuzo-clean-nginx'); }
 function wcn_admin_theme() {
     $state = wcn_state();
-    echo '<div class="soft-smbox p-4"><h2>Webuzo Clean Nginx</h2><p>By Byron Iniotakis &middot; Version 0.5.7</p>';
+    echo '<div class="soft-smbox p-4"><h2>Clean Nginx Cache Wordpress Connector</h2><p>By Byron Iniotakis &middot; Version 0.5.8</p>';
     echo '<p><strong>Native bridge: ' . htmlspecialchars((string) $state['state'], ENT_QUOTES, 'UTF-8') . '</strong>. Enrolled accounts: ' . (int) $state['accounts'] . '.</p>';
     echo '<p>WordPress uses an account-specific signing credential to request only a connection check or account cache clear through the existing Webuzo backend. No separate purge daemon or general hosting API key is needed.</p>';
     echo '<p><strong>Clearing affects every website in the hosting account.</strong> Webuzo performs the native filesystem operation. The plugin does not patch Webuzo, Nginx or PHP configuration.</p>';

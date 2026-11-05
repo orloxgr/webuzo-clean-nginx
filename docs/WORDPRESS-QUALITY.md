@@ -1,4 +1,4 @@
-# WordPress quality checks for 0.5.7
+# WordPress quality checks for 1.0.0
 
 Clear Nginx for Webuzo uses namespace/package `ClearNginxForWebuzo`, text domain `clear-nginx-for-webuzo`, and prefix `clear_nginx_for_webuzo_` for actions, nonces, notices and error codes. There are no legacy namespace aliases, old action handlers, settings migration or notice migration. The bootstrap rejects duplicate loading of its own implementation.
 
@@ -7,6 +7,10 @@ Expected client failures return `WP_Error` and are checked with `is_wp_error()` 
 Operation input must exactly match an allowed original string before `sanitize_text_field()` is applied. HTML, whitespace, control characters, missing fields and non-string input are rejected rather than normalized into an allowed action. WordPress authorization requires `manage_options`, POST and an operation-specific nonce.
 
 Credential contents use `WP_Filesystem_Direct::get_contents()`, without changing the global filesystem object or `FS_METHOD`, selecting FTP/SSH, or requesting credentials. Numeric owner, mode, regular-file type, hard-link count, canonical parent and size checks remain. Read failures and oversized content return `WP_Error`.
+
+## Current packages
+
+The WordPress plugin is 1.0.0. The Webuzo companion is independently versioned as 0.5.8 and displays Clean Nginx Cache Wordpress Connector. The WordPress readme contains the purpose, requirements and installation steps, with the third-party statement at the end. The PHP suites passed 124 assertions (29 protocol, 41 client, 54 handler/UI); 26 live toolbar HTTP assertions and full static/runtime Plugin Check scans were rerun against the current WordPress package. The scans use separate package copies with all annotation comments removed. The actual Webuzo menu, page heading, version and ready state were also verified. The runtime protocol and enrollment implementation are unchanged.
 
 ## Version 0.5.7 toolbar and page changes
 
