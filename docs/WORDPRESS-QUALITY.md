@@ -1,10 +1,22 @@
-# WordPress quality checks for 0.5.5
+# WordPress quality checks for 0.5.6
 
-The WordPress companion follows the WordPress capability, nonce, validation and late-escaping patterns. Its UI and errors use the `clear-nginx-for-webuzo` text domain, with a bundled POT template. Toolbar CSS is enqueued only for an authorized visible toolbar; the button has a keyboard focus indicator. The transport uses the WordPress HTTP API with a fixed loopback URL, no redirects, no cookies, a twenty-second timeout and a bounded response. Exact response bytes remain HMAC-verified before accepting account scope or native completion.
+Clear Nginx for Webuzo uses namespace/package `ClearNginxForWebuzo`, text domain `clear-nginx-for-webuzo`, and prefix `clear_nginx_for_webuzo_` for actions, nonces, notices and error codes. There are no legacy namespace aliases, old action handlers, settings migration or notice migration. The bootstrap rejects duplicate loading of its own implementation.
 
-## Repeatable development checks
+Expected client failures return `WP_Error` and are checked with `is_wp_error()` before response data is used. Error messages remain plain text until escaped with `esc_html()` when displayed. The tests include translated markup and double-escaping checks.
 
-From a source checkout, install development dependencies and run:
+Operation input must exactly match an allowed original string before `sanitize_text_field()` is applied. HTML, whitespace, control characters, missing fields and non-string input are rejected rather than normalized into an allowed action. WordPress authorization requires `manage_options`, POST and an operation-specific nonce.
+
+Credential contents use `WP_Filesystem_Direct::get_contents()`, without changing the global filesystem object or `FS_METHOD`, selecting FTP/SSH, or requesting credentials. Numeric owner, mode, regular-file type, hard-link count, canonical parent and size checks remain. Read failures and oversized content return `WP_Error`.
+
+## One explicit coding-standard exception
+
+There is **one `phpcs:ignore` line**, for `WordPress.PHP.NoSilencedErrors.Discouraged` on the native `@lstat()` metadata call. It prevents a missing/concurrently removed credential from emitting a raw filesystem-path warning; failure instead returns `WP_Error`. The WordPress Filesystem API does not expose the full numeric ownership and hard-link metadata required here.
+
+WordPress-Core permits `@lstat()` in its native-function allowance; WordPress-Extra is stricter. We keep the full WordPress ruleset and document the single exception instead of weakening that ruleset. Running PHPCS with `--ignore-annotations` reports that **one warning**. This is not a claim of zero exceptions or guaranteed reviewer acceptance.
+
+The previous exception-escaping, input-sanitization and direct-read annotations are removed. No Plugin Check category is excluded. Full static and runtime Plugin Check scans also pass on separate copies with **all annotation comments removed**.
+
+## Repeatable checks
 
 ```sh
 composer install
@@ -12,38 +24,28 @@ composer lint
 composer test:wordpress
 php tests/native-bridge-contract.php
 python3 -I -B tests/lifecycle-contract.py
+php vendor/bin/phpcs --standard=phpcs.xml.dist --ignore-annotations
 ```
 
-`phpcs.xml.dist` checks all three packaged WordPress PHP files with WordPress Coding Standards and PHPCompatibilityWP, using WordPress 6.0 and PHP 7.4 as the minimums. Development dependencies are not included in either plugin ZIP.
+The last command deliberately exposes the documented metadata warning. `phpcs.xml.dist` checks all three packaged WordPress PHP files with WordPress Coding Standards and PHPCompatibilityWP, for WordPress 6.0 / PHP 7.4 minimums. The lifecycle suite requires Linux `fcntl`. Development dependencies are not packaged.
 
-For Plugin Check, use a disposable WordPress installation with Plugin Check installed:
+On a disposable WordPress installation with Plugin Check:
 
 ```sh
 wp plugin check clear-nginx-for-webuzo --format=json
 wp --require=wp-content/plugins/plugin-check/cli.php plugin check clear-nginx-for-webuzo --format=json
 ```
 
-The second command includes Plugin Check's runtime checks. Neither command excludes a check. Automated success does not imply manual WordPress.org approval.
+The second command includes runtime checks. Neither excludes a check.
 
-## Results and deliberate exceptions
+## Verification scope
 
-Version 0.5.4 uses the display name **Clear Nginx for Webuzo**, folder/main file `clear-nginx-for-webuzo/clear-nginx-for-webuzo.php`, and text domain `clear-nginx-for-webuzo`. The legacy internal namespace, action names and account notice/credential identifiers remain compatible. The new bootstrap rejects a second loaded implementation with upgrade instructions. It never changes another plugin's activation status. Twelve native migration assertions cover duplicate-activation rejection, preservation of the active old plugin on rejection, manual upgrade of both accounts and the minimum-version fixture, and byte-identical account credentials.
+- WordPress Coding Standards 3.4.1 / PHP_CodeSniffer 3.13.6 with PHPCompatibilityWP 2.1.8: pass with the single explicit annotation above; one warning without annotations.
+- Plugin Check 2.1.0: full static and runtime checks pass, including the updater check. No Update URI or custom updater is included.
+- Public suites: 29 native protocol, 41 client, 47 handler/UI and 17 isolated lifecycle assertions (**134 total**).
+- Actual WordPress HTTP/PHP-FPM: 35 assertions, including stale content becoming visible after native purge and the other account retaining HIT. The release run uses `WP_DEBUG=true` with private logs outside webroots, verifies those logs, and restores original configurations byte-for-byte.
+- Minimum-version fixture: eight assertions on WordPress 6.0 / PHP 7.4.33. Current deployment fixtures use WordPress 7.1.4 / PHP 8.3.
+- Ten actual runtime namespace/action checks across two WordPress installations confirm the new namespace/action, absent old aliases/actions and removed settings migration.
+- Fifteen malformed-input HTTP smoke assertions cover strict input rejection and a valid connection request.
 
-
-Temporary notices use `webuzo_site_cache_notice_` plus the current user ID. Notices with the previous short prefix are not read or migrated; they expire after their original two-minute lifetime. Regression fixtures verify that other-plugin and other-user notice keys are neither displayed nor removed. The WordPress readme documents the fixed local endpoint, dependency, signed request fields and standard WordPress HTTP User-Agent.
-
-
-- WordPress Coding Standards 3.4.1 / PHP_CodeSniffer 3.13.6: zero errors and warnings, with PHPCompatibilityWP 2.1.8.
-- Version 0.5.4 retained a GitHub `Update URI` header and failed the WordPress.org updater check. This was a real submission issue. Version 0.5.5 removes that header. Plugin Check 2.1.0 full static and runtime scans both pass with no reported errors or warnings and no excluded checks, including `plugin_updater`.
-- Version 0.5.5 removes the explicit `load_plugin_textdomain()` call and its Plugin Check suppression. WordPress handles directory language packs automatically; the text domain, language directory header and POT template remain included.
-- Two credential reads use narrowly annotated PHP error suppression to handle concurrent provider enrollment/removal without exposing filesystem warnings. The path is fixed and root-owned. Direct local reading preserves Unix account permissions and does not request FTP credentials or use a remote URL.
-- Exception messages are plain text and escaped when the tools page renders the notice. The corresponding exception-escaping sniff exceptions are documented at each throw; output escaping remains enabled.
-- Operation input is type-checked and matched against an exact safelist before use. Its narrowly annotated input-sanitization notice is covered by malformed/unknown-operation tests; no request data becomes a URL, path or command.
-- Version 0.5.5 reruns all portable suites: 29 native protocol, 28 HTTP API client, 33 WordPress authorization/UI and 17 isolated Linux lifecycle assertions (107 total). The lifecycle suite requires Linux `fcntl`; it is run in the isolated Linux lab, not Windows.
-- Actual WordPress administrator HTTP/PHP-FPM acceptance: 35 assertions, including stale anonymous cache becoming MISS with edited content, the other account retaining HIT, and rejected unauthorized/forged/unsupported actions.
-- Version 0.5.3 reruns those 35 HTTP assertions on two clean WordPress installations with only the companion plugin active and `WP_DEBUG=true`. Error display is disabled and each account writes a private debug log outside its webroot. A logging probe verifies that each log works; both logs contain zero unexpected entries after the HTTP acceptance and subsequent Plugin Check runs. A real stored-transient fixture also confirms foreign notice preservation. Original WordPress configurations are backed up and restored byte-for-byte, and the original Plugin Check activation state is restored.
-- Version 0.5.4 reruns the same 35 debug-enabled HTTP checks under the new name and slug, including private log verification and configuration restoration.
-- Version 0.5.5 reruns the 35 actual WordPress HTTP/PHP-FPM assertions against the unchanged 0.5.4 server companion, including edited content becoming visible after purge and the other account retaining its cache. The server companion and credential registry are not modified for this WordPress update.
-- Minimum-version fixture: WordPress 6.0 with PHP 7.4.33, exercising activation, signed status/purge, tools-page forms and escaping of translated output. The current deployment fixture uses WordPress 7.1.4 with PHP 8.3.
-
-The CLI compatibility fixture does not claim a complete browser/theme/plugin matrix for WordPress 6.0. Automated checks and developer-run deployment checks do not replace an independent security review, accessibility audit or WordPress.org manual review.
+These are developer-run checks on the documented fixtures. They do not cover every theme/plugin/hosting configuration, replace an independent penetration test, or guarantee manual WordPress.org approval.

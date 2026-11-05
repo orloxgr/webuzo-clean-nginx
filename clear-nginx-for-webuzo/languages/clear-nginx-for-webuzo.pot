@@ -2,22 +2,22 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Clear Nginx for Webuzo 0.5.5\n"
+"Project-Id-Version: Clear Nginx for Webuzo 0.5.6\n"
 "Report-Msgid-Bugs-To: https://github.com/orloxgr/webuzo-clean-nginx/issues\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-05T10:55:00+00:00\n"
+"POT-Creation-Date: 2026-11-05T12:04:33+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: clear-nginx-for-webuzo\n"
 
 #. Plugin Name of the plugin
 #: clear-nginx-for-webuzo.php
-#: includes/class-plugin.php:80
-#: includes/class-plugin.php:138
+#: includes/class-plugin.php:50
+#: includes/class-plugin.php:108
 msgid "Clear Nginx for Webuzo"
 msgstr ""
 
@@ -36,156 +36,152 @@ msgstr ""
 msgid "Byron Iniotakis"
 msgstr ""
 
-#: clear-nginx-for-webuzo.php:28
-msgid "Deactivate the previous Webuzo Site Cache installation before activating Clear Nginx for Webuzo. Only one copy may be active."
+#: clear-nginx-for-webuzo.php:27
+msgid "Only one copy of Clear Nginx for Webuzo may be active. Deactivate the duplicate installation before continuing."
 msgstr ""
 
-#: includes/class-native-panel.php:26
+#: includes/class-native-panel.php:24
 msgid "PHP POSIX support is required for the native panel connection."
 msgstr ""
 
-#: includes/class-native-panel.php:31
+#: includes/class-native-panel.php:28
 msgid "WordPress must run as its own hosting account."
 msgstr ""
 
-#: includes/class-native-panel.php:42
+#: includes/class-native-panel.php:38
 msgid "The hosting administrator must activate Webuzo Clean Nginx. If this account or its Nginx cache is new, wait for the next enrollment sync, scheduled every 10 minutes, then retry."
 msgstr ""
 
-#: includes/class-native-panel.php:52
+#: includes/class-native-panel.php:51
 msgid "The native panel credential is unavailable or invalid. Wait for the next enrollment sync (every 10 minutes); if it persists, ask the hosting administrator to check account eligibility."
 msgstr ""
 
-#: includes/class-native-panel.php:67
+#: includes/class-native-panel.php:64
 msgid "Unsupported native panel operation."
 msgstr ""
 
-#: includes/class-native-panel.php:104
+#: includes/class-native-panel.php:103
 msgid "The local Webuzo request failed or timed out; completion is unknown. Check the panel before retrying."
 msgstr ""
 
-#: includes/class-native-panel.php:113
+#: includes/class-native-panel.php:111
 msgid "The panel did not return a complete authenticated cache response. Check plugin activation and account enrollment."
 msgstr ""
 
-#: includes/class-native-panel.php:117
+#: includes/class-native-panel.php:114
 msgid "The native panel response signature is invalid."
 msgstr ""
 
-#: includes/class-native-panel.php:125
+#: includes/class-native-panel.php:121
 msgid "The native panel did not confirm this request and its account scope."
 msgstr ""
 
-#: includes/class-native-panel.php:130
-#: includes/class-plugin.php:157
+#: includes/class-native-panel.php:126
+#: includes/class-plugin.php:127
 msgid "Wait 2 seconds between connection checks and 10 seconds between cache clears."
 msgstr ""
 
-#: includes/class-native-panel.php:131
+#: includes/class-native-panel.php:127
 msgid "A cache clear is already running. Try again shortly."
 msgstr ""
 
-#: includes/class-native-panel.php:132
+#: includes/class-native-panel.php:128
 msgid "The hosting administrator must refresh enrollment after an account identity change."
 msgstr ""
 
-#: includes/class-native-panel.php:133
+#: includes/class-native-panel.php:129
 msgid "The native Webuzo clear command did not complete normally. Check the panel log; cache clearing is not confirmed."
 msgstr ""
 
-#: includes/class-native-panel.php:134
+#: includes/class-native-panel.php:130
 msgid "Account Nginx caching or reverse proxy is disabled, or its cache directory is missing or unsafe."
 msgstr ""
 
-#: includes/class-native-panel.php:135
+#: includes/class-native-panel.php:131
 msgid "The panel rejected a repeated request. Try again with a fresh request."
 msgstr ""
 
-#: includes/class-native-panel.php:138
+#: includes/class-native-panel.php:133
 msgid "The native panel rejected the cache request."
 msgstr ""
 
-#: includes/class-plugin.php:70
-msgid "Legacy API settings were removed from WordPress. Revoke the previous account API key in Webuzo as well; deleting its saved copy does not revoke it."
-msgstr ""
-
-#: includes/class-plugin.php:95
-#: includes/class-plugin.php:104
+#: includes/class-plugin.php:65
+#: includes/class-plugin.php:74
 msgid "Clear Cache"
 msgstr ""
 
-#: includes/class-plugin.php:103
+#: includes/class-plugin.php:73
 msgid "Clears Nginx cache for all websites in this hosting account."
 msgstr ""
 
-#: includes/class-plugin.php:116
+#: includes/class-plugin.php:86
 msgid "Settings"
 msgstr ""
 
-#: includes/class-plugin.php:140
+#: includes/class-plugin.php:110
 msgid "This release supports single-site WordPress only."
 msgstr ""
 
-#: includes/class-plugin.php:149
+#: includes/class-plugin.php:119
 msgid "The Native Webuzo bridge uses the hosting provider’s existing panel to clear cache. The companion Webuzo plugin provisions a separate credential for each hosting account. No panel password or general API key is needed."
 msgstr ""
 
-#: includes/class-plugin.php:150
+#: includes/class-plugin.php:120
 msgid "This plugin clears the Nginx cache for all websites in this hosting account."
 msgstr ""
 
-#: includes/class-plugin.php:151
+#: includes/class-plugin.php:121
 msgid "Check connection"
 msgstr ""
 
-#: includes/class-plugin.php:151
+#: includes/class-plugin.php:121
 msgid "Checks which hosting account will be used. This action does not clear cache."
 msgstr ""
 
-#: includes/class-plugin.php:153
+#: includes/class-plugin.php:123
 msgid "Test connection"
 msgstr ""
 
-#: includes/class-plugin.php:154
+#: includes/class-plugin.php:124
 msgid "Clear account cache"
 msgstr ""
 
-#: includes/class-plugin.php:156
+#: includes/class-plugin.php:126
 msgid "Clear Nginx cache for this account"
 msgstr ""
 
-#: includes/class-plugin.php:158
+#: includes/class-plugin.php:128
 msgid "New accounts become available after the provider’s next enrollment sync, scheduled every 10 minutes."
 msgstr ""
 
-#: includes/class-plugin.php:159
+#: includes/class-plugin.php:129
 msgid "Manual account-wide clearing through Webuzo. No automatic purge or change to whether caching is enabled."
 msgstr ""
 
-#: includes/class-plugin.php:169
+#: includes/class-plugin.php:135
 msgid "You cannot manage this site’s cache."
 msgstr ""
 
-#: includes/class-plugin.php:173
+#: includes/class-plugin.php:139
 msgid "Use the cache management form."
 msgstr ""
 
-#: includes/class-plugin.php:179
+#: includes/class-plugin.php:144
 msgid "Unknown operation."
 msgstr ""
 
-#: includes/class-plugin.php:184
+#: includes/class-plugin.php:150
 msgid "Multisite is not supported by this release."
 msgstr ""
 
 #. translators: %s: Hosting account username confirmed by the native bridge.
-#: includes/class-plugin.php:191
+#: includes/class-plugin.php:162
 #, php-format
 msgid "Connected to the native Webuzo bridge for hosting account %s. Connection test only; no cache was cleared."
 msgstr ""
 
 #. translators: %s: Hosting account username confirmed by the native bridge.
-#: includes/class-plugin.php:198
+#: includes/class-plugin.php:168
 #, php-format
 msgid "The native Webuzo cache-clear command completed for hosting account %s. This affects every site in that account. New visits rebuild cache."
 msgstr ""

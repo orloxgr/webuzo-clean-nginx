@@ -2,10 +2,10 @@
 /**
  * Account-scoped client for the native Webuzo bridge.
  *
- * @package WebuzoSiteCache
+ * @package ClearNginxForWebuzo
  */
 
-namespace WebuzoSiteCache;
+namespace ClearNginxForWebuzo;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -17,39 +17,38 @@ final class Native_Panel {
 	/**
 	 * Read the credential provisioned for the current Unix account.
 	 *
-	 * @return array Validated credential.
-	 * @throws \RuntimeException When the credential is unavailable or unsafe.
+	 * @return array|\WP_Error Validated credential or a credential error.
 	 */
 	private function credentials() {
 		if ( ! function_exists( 'posix_geteuid' ) ) {
-			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Exceptions carry plain text; Plugin::page() escapes the final notice.
-			throw new \RuntimeException( __( 'PHP POSIX support is required for the native panel connection.', 'clear-nginx-for-webuzo' ) );
+			return new \WP_Error( 'clear_nginx_for_webuzo_posix_required', __( 'PHP POSIX support is required for the native panel connection.', 'clear-nginx-for-webuzo' ) );
 		}
 		$uid = posix_geteuid();
 		if ( $uid < 1000 ) {
-			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Exceptions carry plain text; Plugin::page() escapes the final notice.
-			throw new \RuntimeException( __( 'WordPress must run as its own hosting account.', 'clear-nginx-for-webuzo' ) );
+			return new \WP_Error( 'clear_nginx_for_webuzo_hosting_identity_required', __( 'WordPress must run as its own hosting account.', 'clear-nginx-for-webuzo' ) );
 		}
 		$dir  = '/var/lib/webuzo-clean-nginx/clients';
 		$path = $dir . '/' . $uid . '.json';
 		clearstatcache( true, $path );
-		// Atomic provider enrollment/removal can race a read; report a controlled error.
-		// phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- A missing private credential must not expose filesystem warnings.
+		// Native metadata is required for numeric ownership, symlink and hard-link checks; WordPress has no equivalent for this full check.
+		// phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- Native lstat has no WordPress replacement for link count and numeric ownership; a concurrent provider removal must return WP_Error without emitting a path warning.
 		$stat = @lstat( $path );
 		if ( realpath( $dir ) !== $dir || ! $stat || ( $stat['mode'] & 0170000 ) !== 0100000 || 0 !== $stat['uid'] ||
 			( $stat['mode'] & 0027 ) || 1 !== $stat['nlink'] || $stat['size'] > 1024 ) {
-			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Exceptions carry plain text; Plugin::page() escapes the final notice.
-			throw new \RuntimeException( __( 'The hosting administrator must activate Webuzo Clean Nginx. If this account or its Nginx cache is new, wait for the next enrollment sync, scheduled every 10 minutes, then retry.', 'clear-nginx-for-webuzo' ) );
+			return new \WP_Error( 'clear_nginx_for_webuzo_credential_unavailable', __( 'The hosting administrator must activate Webuzo Clean Nginx. If this account or its Nginx cache is new, wait for the next enrollment sync, scheduled every 10 minutes, then retry.', 'clear-nginx-for-webuzo' ) );
 		}
-		// Local, root-owned capability file; never a URL or user-selected path.
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents,WordPress.PHP.NoSilencedErrors.Discouraged -- Direct read preserves OS account isolation and handles credential rotation safely.
-		$raw   = @file_get_contents( $path );
-		$value = json_decode( (string) $raw, true );
+		// The capability is local and read-only; use the direct WordPress transport without changing global filesystem settings.
+		if ( ! class_exists( 'WP_Filesystem_Direct' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/class-wp-filesystem-base.php';
+			require_once ABSPATH . 'wp-admin/includes/class-wp-filesystem-direct.php';
+		}
+		$filesystem = new \WP_Filesystem_Direct( null );
+		$raw        = $filesystem->get_contents( $path );
+		$value      = is_string( $raw ) && strlen( $raw ) <= 1024 ? json_decode( $raw, true ) : null;
 		if ( ! is_array( $value ) || ( $value['v'] ?? null ) !== 1 || ! isset( $value['id'], $value['key'] ) ||
 			! is_string( $value['id'] ) || ! preg_match( '/^[a-f0-9]{32}$/D', $value['id'] ) ||
 			! is_string( $value['key'] ) || ! preg_match( '/^[a-f0-9]{64}$/D', $value['key'] ) ) {
-			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Exceptions carry plain text; Plugin::page() escapes the final notice.
-			throw new \RuntimeException( __( 'The native panel credential is unavailable or invalid. Wait for the next enrollment sync (every 10 minutes); if it persists, ask the hosting administrator to check account eligibility.', 'clear-nginx-for-webuzo' ) );
+			return new \WP_Error( 'clear_nginx_for_webuzo_credential_invalid', __( 'The native panel credential is unavailable or invalid. Wait for the next enrollment sync (every 10 minutes); if it persists, ask the hosting administrator to check account eligibility.', 'clear-nginx-for-webuzo' ) );
 		}
 		return $value;
 	}
@@ -58,17 +57,18 @@ final class Native_Panel {
 	 * Perform a bounded request and verify the exact signed response bytes.
 	 *
 	 * @param string $operation Either status or purge.
-	 * @return array Authenticated native result.
-	 * @throws \RuntimeException For rejected or unconfirmed requests.
+	 * @return array|\WP_Error Authenticated native result or a request error.
 	 */
 	private function request( $operation ) {
 		if ( ! in_array( $operation, array( 'status', 'purge' ), true ) ) {
-			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Exceptions carry plain text; Plugin::page() escapes the final notice.
-			throw new \RuntimeException( __( 'Unsupported native panel operation.', 'clear-nginx-for-webuzo' ) );
+			return new \WP_Error( 'clear_nginx_for_webuzo_unsupported_operation', __( 'Unsupported native panel operation.', 'clear-nginx-for-webuzo' ) );
 		}
 		$credential = $this->credentials();
-		$nonce      = bin2hex( random_bytes( 16 ) );
-		$body       = wp_json_encode(
+		if ( is_wp_error( $credential ) ) {
+			return $credential;
+		}
+		$nonce     = bin2hex( random_bytes( 16 ) );
+		$body      = wp_json_encode(
 			array(
 				'v'     => 1,
 				'op'    => $operation,
@@ -78,7 +78,7 @@ final class Native_Panel {
 			),
 			JSON_UNESCAPED_SLASHES
 		);
-		$signature  = hash_hmac( 'sha256', "WCN-REQUEST\n" . $body, hex2bin( $credential['key'] ) );
+		$signature = hash_hmac( 'sha256', "WCN-REQUEST\n" . $body, hex2bin( $credential['key'] ) );
 		// A fixed loopback URL is intentional. Never accept a caller-selected URL.
 		$response = wp_remote_post(
 			'http://127.0.0.1:2002/index.php?act=webuzo-clean-nginx-bridge',
@@ -100,8 +100,7 @@ final class Native_Panel {
 			)
 		);
 		if ( is_wp_error( $response ) ) {
-			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Exceptions carry plain text; Plugin::page() escapes the final notice.
-			throw new \RuntimeException( __( 'The local Webuzo request failed or timed out; completion is unknown. Check the panel before retrying.', 'clear-nginx-for-webuzo' ) );
+			return new \WP_Error( 'clear_nginx_for_webuzo_transport_unconfirmed', __( 'The local Webuzo request failed or timed out; completion is unknown. Check the panel before retrying.', 'clear-nginx-for-webuzo' ) );
 		}
 		$raw       = wp_remote_retrieve_body( $response );
 		$length    = wp_remote_retrieve_header( $response, 'content-length' );
@@ -109,20 +108,17 @@ final class Native_Panel {
 		if ( ! is_string( $raw ) || strlen( $raw ) > 8192 || ! is_string( $length ) || ! ctype_digit( $length ) ||
 			strlen( $raw ) !== (int) $length || ! is_string( $signature ) || ! preg_match( '/^[a-f0-9]{64}$/D', $signature ) ||
 			wp_remote_retrieve_header( $response, 'transfer-encoding' ) || wp_remote_retrieve_header( $response, 'content-encoding' ) ) {
-			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Exceptions carry plain text; Plugin::page() escapes the final notice.
-			throw new \RuntimeException( __( 'The panel did not return a complete authenticated cache response. Check plugin activation and account enrollment.', 'clear-nginx-for-webuzo' ) );
+			return new \WP_Error( 'clear_nginx_for_webuzo_response_invalid', __( 'The panel did not return a complete authenticated cache response. Check plugin activation and account enrollment.', 'clear-nginx-for-webuzo' ) );
 		}
 		if ( ! hash_equals( hash_hmac( 'sha256', "WCN-RESPONSE\n" . $raw, hex2bin( $credential['key'] ) ), $signature ) ) {
-			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Exceptions carry plain text; Plugin::page() escapes the final notice.
-			throw new \RuntimeException( __( 'The native panel response signature is invalid.', 'clear-nginx-for-webuzo' ) );
+			return new \WP_Error( 'clear_nginx_for_webuzo_signature_invalid', __( 'The native panel response signature is invalid.', 'clear-nginx-for-webuzo' ) );
 		}
 		$data = json_decode( $raw, true );
 		if ( ! is_array( $data ) || ( $data['v'] ?? null ) !== 1 || ( $data['nonce'] ?? '' ) !== $nonce ||
 			( $data['op'] ?? '' ) !== $operation || ( $data['scope'] ?? '' ) !== 'account' ||
 			( $data['backend'] ?? '' ) !== 'webuzo-native' || ! isset( $data['account'] ) ||
 			! is_string( $data['account'] ) || ! preg_match( '/^[a-z_][a-z0-9_-]{0,31}$/iD', $data['account'] ) ) {
-			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Exceptions carry plain text; Plugin::page() escapes the final notice.
-			throw new \RuntimeException( __( 'The native panel did not confirm this request and its account scope.', 'clear-nginx-for-webuzo' ) );
+			return new \WP_Error( 'clear_nginx_for_webuzo_scope_unconfirmed', __( 'The native panel did not confirm this request and its account scope.', 'clear-nginx-for-webuzo' ) );
 		}
 		if ( ( $data['ok'] ?? null ) !== true || 200 !== wp_remote_retrieve_response_code( $response ) ||
 			( $data['code'] ?? '' ) !== ( 'purge' === $operation ? 'native_completed' : 'ready' ) ) {
@@ -134,8 +130,7 @@ final class Native_Panel {
 				'cache_unavailable' => __( 'Account Nginx caching or reverse proxy is disabled, or its cache directory is missing or unsafe.', 'clear-nginx-for-webuzo' ),
 				'replayed'          => __( 'The panel rejected a repeated request. Try again with a fresh request.', 'clear-nginx-for-webuzo' ),
 			);
-			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Exceptions carry plain text; Plugin::page() escapes the final notice.
-			throw new \RuntimeException( $messages[ $data['code'] ?? '' ] ?? __( 'The native panel rejected the cache request.', 'clear-nginx-for-webuzo' ) );
+			return new \WP_Error( 'clear_nginx_for_webuzo_native_rejected', $messages[ $data['code'] ?? '' ] ?? __( 'The native panel rejected the cache request.', 'clear-nginx-for-webuzo' ) );
 		}
 		return $data;
 	}
@@ -143,7 +138,7 @@ final class Native_Panel {
 	/**
 	 * Check account enrollment without clearing cache.
 	 *
-	 * @return array Authenticated account status.
+	 * @return array|\WP_Error Authenticated account status or a request error.
 	 */
 	public function check_connection() {
 		return $this->request( 'status' );
@@ -152,7 +147,7 @@ final class Native_Panel {
 	/**
 	 * Request an account-wide native cache clear.
 	 *
-	 * @return array Authenticated native completion result.
+	 * @return array|\WP_Error Authenticated native completion result or a request error.
 	 */
 	public function purge() {
 		return $this->request( 'purge' );

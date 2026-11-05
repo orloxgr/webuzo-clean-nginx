@@ -35,13 +35,22 @@ The refresh command is fixed: GNU `timeout` permits 45 seconds followed by a two
 
 ## WordPress administrator
 
-When upgrading from **Webuzo Site Cache**, deactivate that old WordPress plugin before activating **Clear Nginx for Webuzo**. The new package uses `clear-nginx-for-webuzo/clear-nginx-for-webuzo.php`; WordPress treats it as a different plugin identity. Install and activate the new ZIP, test the connection, then delete the inactive old WordPress copy. No account credential rotation or panel reconfiguration is required for this rename. The new bootstrap rejects activation if the previous implementation is already loaded, and never deactivates another plugin automatically.
 
-Install the companion WordPress ZIP. There are no connection credentials to paste or transport settings. Open **Tools → Clear Nginx for Webuzo**, test the connection, then clear cache. Every site sharing the hosting account is affected.
+Install and activate Clear Nginx for Webuzo from its WordPress ZIP. There are no connection credentials to paste or transport settings. Open **Tools → Clear Nginx for Webuzo**, test the connection, then clear cache. Every site sharing the hosting account is affected.
 
 The PHP process must run under its account UID and be able to read its provisioned credential and connect to `127.0.0.1:2002`. Missing credentials, blocked sockets or a disabled companion plugin fail closed. There is no automatic API fallback.
 
-Earlier plugin API settings are removed on an administrator visit. If those settings held an account API key, revoke it in Webuzo separately; removing a saved copy does not invalidate that key or copies in old database backups.
+
+## Replacing a development installation
+
+1. Deactivate the WordPress development copy first. Remove that WordPress plugin through its Plugins screen if replacing a differently named folder.
+2. In Webuzo Admin > Plugins, **deactivate the old Webuzo plugin before deleting its uploaded bundle**. This allows its existing removal hook to run. For the old service-based candidate, deactivation stops/disables `webuzo-cache-purge.service` and removes its known installed service/code/registry files. For the native bridge candidate, deactivation removes its enrollment cron and revokes its account credentials.
+3. Upload `webuzo-clean-nginx-0.5.6-public-review.zip`, activate it, and check Nginx Cache for `ready`, eligible account count and the ten-minute enrollment schedule.
+4. Install and activate `clear-nginx-for-webuzo-0.5.6-public-review.zip` in WordPress. Reload the dashboard to get forms using the new action/nonce identifiers, then test connection and clear cache.
+
+If the separate old purge service was installed without a Webuzo plugin, or its known unit remains, activating the new Webuzo plugin also checks for `/etc/systemd/system/webuzo-cache-purge.service`. When present, it validates the three known old installed files as trusted root-owned regular files, runs `systemctl disable --now webuzo-cache-purge.service`, removes only `/usr/local/lib/webuzo-cache-purge/webuzo_cache_purge.py`, `/etc/webuzo-cache-purge/accounts.json` and that unit file when present, then runs `systemctl daemon-reload`. Unsafe files stop installation rather than broadening cleanup. It does not search for or remove arbitrary services, websites or cache contents. Other old empty directories/logs/socket leftovers are not recursively deleted.
+
+These are administrator/root lifecycle operations. All paths created by the new activation are listed above. There is no need to manually remove account cache folders.
 
 ## Refresh, upgrade and remove
 

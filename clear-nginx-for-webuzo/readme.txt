@@ -4,7 +4,7 @@ Tested up to: 7.1
 Tags: webuzo, nginx, cache, purge
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 0.5.5
+Stable tag: 0.5.6
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -42,11 +42,14 @@ This connection remains on the hosting server. The plugin does not load remote s
 The companion Webuzo plugin synchronizes enrollment automatically every ten minutes. New accounts become eligible when native cache/proxy is enabled. Existing credentials and cooldowns are preserved. Busy/failed runs retry at a later scheduled cycle. Deactivate/reactivate only to rotate all credentials or upgrade. Unsupported/missing credentials fail closed; no API fallback exists.
 
 == Upgrade Notice ==
+= 0.5.6 =
+Uses the ClearNginxForWebuzo namespace and matching identifiers, WP_Error and the WordPress Filesystem API. Deactivate earlier development copies before installation; old action and namespace aliases are not provided.
+
 = 0.5.5 =
 Removes the Update URI header for WordPress.org submission and relies on WordPress automatic translation loading. The native account cache-clear protocol is unchanged; the existing 0.5.4 server companion remains compatible.
 
 = 0.5.4 =
-Renamed to Clear Nginx for Webuzo. Deactivate the previous Webuzo Site Cache plugin before activating this package; the plugin folder and main file now use clear-nginx-for-webuzo.
+Aligns the public display name, plugin folder and text domain with Clear Nginx for Webuzo.
 
 = 0.5.3 =
 Uses a full plugin-specific prefix for temporary notices and documents the local Webuzo connection and request data.
@@ -58,9 +61,12 @@ Uses the WordPress HTTP API with no redirects, bounded responses and signed acco
 Adds a root-owned enrollment cron every ten minutes. It never clears cache, has a timeout/overlap lock and is removed on deactivation.
 
 = 0.5.0 =
-Replaces the custom root daemon with Webuzo's native clear command and removes general API compatibility. An administrator visit removes old saved API settings. Revoke any previous broad account API key separately in Webuzo; deleting its saved copy does not revoke it.
+Uses Webuzo's native clear command and account-scoped capabilities instead of a custom purge daemon or general panel API credentials.
 
 == Changelog ==
+= 0.5.6 =
+Aligns namespace, package, actions, nonces, notices and error codes with the plugin name. Removes obsolete settings migration, uses WP_Error and WP_Filesystem_Direct, and sanitizes validated operation input. Retains one documented native metadata-check annotation.
+
 = 0.5.5 =
 Removes the non-directory update identity and redundant explicit translation loader. Uses the standard WordPress update and translation mechanisms.
 
