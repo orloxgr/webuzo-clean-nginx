@@ -1,0 +1,21 @@
+#wpadminbar .wsc-cache-form {
+	margin: 0;
+}
+
+#wpadminbar .wsc-cache-button {
+	display: block;
+	width: 100%;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	line-height: inherit;
+	text-align: start;
+	cursor: pointer;
+}
+
+#wpadminbar .wsc-cache-button:focus-visible {
+	outline: 2px solid currentColor;
+	outline-offset: 2px;
+}

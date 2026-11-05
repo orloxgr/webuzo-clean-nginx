@@ -4,6 +4,8 @@
 !/.gitattributes
 !/README.md
 !/LICENSE
+!/phpcs.xml.dist
+!/composer.json
 !/docs/
 !/server/
 !/tests/

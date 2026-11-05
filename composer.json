@@ -1,0 +1,22 @@
+{
+    "name": "orloxgr/webuzo-clean-nginx",
+    "description": "Development checks for the companion WordPress cache plugin.",
+    "type": "project",
+    "license": "GPL-2.0-or-later",
+    "require-dev": {
+        "wp-coding-standards/wpcs": "^3.4",
+        "phpcompatibility/phpcompatibility-wp": "^2.1"
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    },
+    "scripts": {
+        "lint": "phpcs --standard=phpcs.xml.dist",
+        "test:wordpress": [
+            "@php tests/wordpress-contract.php",
+            "@php tests/native-client-contract.php"
+        ]
+    }
+}

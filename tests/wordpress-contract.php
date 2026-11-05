@@ -3,6 +3,13 @@
 define('ABSPATH', __DIR__);
 $authorized = true; $multisite = false; $validNonce = true; $options = []; $notice = null; $checks = [];
 function add_action(...$args) {}
+function __($text, $domain = '') { return $text; }
+function esc_html__($text, $domain = '') { return esc_html($text); }
+function esc_attr__($text, $domain = '') { return esc_attr($text); }
+function sanitize_text_field($value) { return strip_tags($value); }
+function is_admin_bar_showing() { return $GLOBALS['toolbar_visible'] ?? true; }
+function plugins_url($path, $file) { return 'https://www.example.test/wp-content/plugins/webuzo-site-cache/' . $path; }
+function wp_enqueue_style(...$args) { $GLOBALS['styles'][] = $args; }
 function current_user_can($cap) { return $GLOBALS['authorized'] && $cap === 'manage_options'; }
 function is_multisite() { return $GLOBALS['multisite']; }
 function get_option($key, $default = false) { return $GLOBALS['options'][$key] ?? $default; }
@@ -54,6 +61,16 @@ $toolbar = new class { public $nodes = []; public function add_node($n) { $this-
 $node = $toolbar->nodes['webuzo-site-cache-purge'];
 check($node['parent'] === 'webuzo-site-cache' && strpos($node['title'], '>Clear Cache</button>') !== false, 'Clear Cache dropdown action');
 check(strpos($node['title'], 'method="post"') !== false && strpos($node['title'], 'test-toolbar-nonce') !== false && !isset($node['href']), 'Toolbar uses POST and nonce');
+$styles = []; $toolbar_visible = true;
+\WebuzoSiteCache\Plugin::styles();
+check(count($styles) === 1 && $styles[0][1] === 'https://www.example.test/wp-content/plugins/webuzo-site-cache/assets/admin-bar.css', 'Styles use the main plugin path');
+check($styles[0][2] === ['admin-bar'] && $styles[0][3] === '0.5.2', 'Toolbar styles declare dependency and cache version');
+foreach (['visitor', 'hidden', 'multisite'] as $case) {
+    $styles = []; $authorized = $case !== 'visitor'; $toolbar_visible = $case !== 'hidden'; $multisite = $case === 'multisite';
+    \WebuzoSiteCache\Plugin::styles(); check($styles === [], 'No unnecessary styles: ' . $case);
+}
+$authorized = true; $toolbar_visible = true; $multisite = false;
+check(strpos($node['title'], 'style=') === false, 'Toolbar uses enqueued CSS rather than inline styles');
 $options[\WebuzoSiteCache\Plugin::OPTION] = ['key' => 'fake-legacy-ciphertext', 'panel' => 'https://panel.example.test:2003', 'user' => 'account1'];
 $authorized = false; \WebuzoSiteCache\Plugin::retire_legacy_credentials();
 check(isset($options[\WebuzoSiteCache\Plugin::OPTION]), 'Only administrator migrates old settings');

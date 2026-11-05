@@ -10,6 +10,9 @@ PLUGIN = (
     'webuzo-site-cache/webuzo-site-cache.php',
     'webuzo-site-cache/readme.txt',
     'webuzo-site-cache/includes/class-native-panel.php',
+    'webuzo-site-cache/includes/class-plugin.php',
+    'webuzo-site-cache/assets/admin-bar.css',
+    'webuzo-site-cache/languages/webuzo-site-cache.pot',
 )
 NATIVE = (
     'webuzo-clean-nginx/webuzo-clean-nginx.php',
@@ -53,7 +56,7 @@ def main():
     for name in ('lifecycle.py',):
         native_sources['webuzo-clean-nginx/service/' + name] = 'server/' + name
     native_sources['webuzo-clean-nginx/LICENSE'] = 'LICENSE'
-    for name in ('README.md', 'docs/INSTALLATION.md', 'docs/SECURITY-REVIEW.md'):
+    for name in ('README.md', 'docs/INSTALLATION.md', 'docs/SECURITY-REVIEW.md', 'docs/WORDPRESS-QUALITY.md'):
         native_sources['webuzo-clean-nginx/' + name] = name
     package(native, native_sources, 'webuzo-clean-nginx/SHA256SUMS.txt')
     checksums = ''.join(hashlib.sha256(path.read_bytes()).hexdigest() + '  ' + path.name + '\n'
