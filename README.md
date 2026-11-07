@@ -6,12 +6,12 @@ Clear your hosting account's Nginx cache directly from the WordPress dashboard o
 
 ## Downloads
 
-Download both plugins from [release v1.0.0](https://github.com/orloxgr/webuzo-clean-nginx/releases/tag/v1.0.0).
+Download both plugins from [release v1.0.1](https://github.com/orloxgr/webuzo-clean-nginx/releases/tag/v1.0.1).
 
 | Package | Version | Install in |
 | --- | --- | --- |
-| [Clear Nginx for Webuzo](https://github.com/orloxgr/webuzo-clean-nginx/releases/download/v1.0.0/clear-nginx-for-webuzo-1.0.0.zip) | 1.0.0 | Each WordPress site |
-| [Clean Nginx Cache Wordpress Connector](https://github.com/orloxgr/webuzo-clean-nginx/releases/download/v1.0.0/webuzo-clean-nginx-0.5.8.zip) | 0.5.8 | Webuzo Admin, once per server |
+| [Clear Nginx for Webuzo](https://github.com/orloxgr/webuzo-clean-nginx/releases/download/v1.0.1/clear-nginx-for-webuzo-1.0.0.zip) | 1.0.0 | Each WordPress site |
+| [Clean Nginx Cache Wordpress Connector](https://github.com/orloxgr/webuzo-clean-nginx/releases/download/v1.0.1/webuzo-clean-nginx-0.5.9.zip) | 0.5.9 | Webuzo Admin, once per server |
 
 Use these ZIPs to install the plugins. The release includes `SHA256SUMS.txt` to verify the downloads.
 
@@ -25,7 +25,7 @@ Use these ZIPs to install the plugins. The release includes `SHA256SUMS.txt` to 
 ## Installation and use
 
 1. The hosting administrator uploads and activates the connector ZIP in **Webuzo Admin > Plugins > Installed Plugins > Add New**.
-2. Open **Clean Nginx Cache Wordpress Connector** in Webuzo to check that the account is connected.
+2. Open **Clean Nginx Cache** in the Webuzo menu to check that the account is connected.
 3. In WordPress, open **Plugins > Add New > Upload Plugin**, upload the WordPress ZIP and activate it.
 4. Open **Tools > Clear Nginx for Webuzo** and click **Test connection**.
 5. Click **Clear Cache** in the toolbar to clear cache and return to the current page. Its dropdown contains a separate **Settings** link. You can also clear cache from the tools page.

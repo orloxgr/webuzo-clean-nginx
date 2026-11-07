@@ -1,7 +1,7 @@
 {
   "name": "Clean Nginx Cache Wordpress Connector",
   "slug": "webuzo-clean-nginx",
-  "version": "0.5.8",
+  "version": "0.5.9",
   "author": "Byron Iniotakis",
   "requires": "4.0.0",
   "compatibility": [],

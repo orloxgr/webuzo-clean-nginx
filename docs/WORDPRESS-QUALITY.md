@@ -10,7 +10,7 @@ Credential contents use `WP_Filesystem_Direct::get_contents()`, without changing
 
 ## Current packages
 
-The WordPress plugin is 1.0.0. The Webuzo companion is independently versioned as 0.5.8 and displays Clean Nginx Cache Wordpress Connector. The WordPress readme contains the purpose, requirements and installation steps, with the third-party statement at the end. The PHP suites passed 124 assertions (29 protocol, 41 client, 54 handler/UI); 26 live toolbar HTTP assertions and full static/runtime Plugin Check scans were rerun against the current WordPress package. The scans use separate package copies with all annotation comments removed. The actual Webuzo menu, page heading, version and ready state were also verified. The runtime protocol and enrollment implementation are unchanged.
+The WordPress plugin is 1.0.0. The Webuzo companion is independently versioned as 0.5.9. Its menu label is Clean Nginx Cache; its plugin name and page heading remain Clean Nginx Cache Wordpress Connector. The WordPress readme contains the purpose, requirements and installation steps, with the third-party statement at the end. The PHP suites passed 124 assertions (29 protocol, 41 client, 54 handler/UI); 26 live toolbar HTTP assertions and full static/runtime Plugin Check scans were rerun against the current WordPress package. The scans use separate package copies with all annotation comments removed. The actual Webuzo menu, page heading, version and ready state were also verified. The runtime protocol and enrollment implementation are unchanged.
 
 ## Version 0.5.7 toolbar and page changes
 
