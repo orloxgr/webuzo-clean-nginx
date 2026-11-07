@@ -51,7 +51,7 @@ function wcn_state() {
 add_filter('admin_menu', 'wcn_admin_menu', 10, 1);
 function wcn_admin_menu($menu) {
     global $globals;
-    $menu['webuzo-clean-nginx'] = ['name' => 'Clean Nginx Cache Wordpress Connector', 'href' => $globals['ind'] . 'act=webuzo-clean-nginx', 'icon' => 'fas fa-broom'];
+    $menu['webuzo-clean-nginx'] = ['name' => 'Clean Nginx Cache', 'href' => $globals['ind'] . 'act=webuzo-clean-nginx', 'icon' => 'fas fa-broom'];
     return $menu;
 }
 admin_act('webuzo-clean-nginx', 'wcn_admin');
