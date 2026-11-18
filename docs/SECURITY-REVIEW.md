@@ -1,6 +1,32 @@
-# Version 0.5.7 review scope
+# Native connector security review
 
-This is a developer-run review candidate, not an independent penetration test or a claim that a privileged plugin cannot contain vulnerabilities.
+This is a developer-run security review, not an independent penetration test or a claim that a privileged plugin cannot contain vulnerabilities.
+
+## WordPress 1.1.0 / connector 0.6.0 changes
+
+The account-only trust boundary and request schema below are unchanged.
+Connector 0.6.0 adds signed version/capability/cooldown information; it does not
+accept another target, command, path or operation. Enrollment and the native
+runner are unchanged. The root-owned shared account lock and cooldown still
+arbitrate requests from all installations in the account.
+
+WordPress now optionally requests clears after public changes. Preferences are
+administrator-only and automation defaults to off. Approved public comments
+have a separate opt-in switch. Automation does not depend on the current
+visitor's role, so scheduled publication and legitimate programmatic writes
+work. The added automation intentionally increases the opportunities to request
+an already-authorized account clear; it does not increase filesystem authority.
+
+Non-autoloaded WordPress options persist work. An expiring ownership lock and
+atomic compare-and-swap operations prevent stale workers clearing newer work
+or unlocking a replacement worker. Each generation receives at most four
+automatic retries, only for explicit authenticated busy/rate-limit rejections.
+Unconfirmed transport/native failures are reported without automatic retries.
+Diagnostics persist only an allowlisted summary and never the capability key,
+request signature or raw response.
+
+Current evidence and limits are recorded in [verification for 1.1.0](VERIFICATION-1.1.0.md).
+The versioned acceptance results later in this file are historical baselines.
 
 ## Intended boundary
 

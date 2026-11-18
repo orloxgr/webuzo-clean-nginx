@@ -1,9 +1,15 @@
 <?php
 /** Account-scoped capability endpoint, loaded only by the active Webuzo plugin. */
 final class WCN_Native_Bridge {
+    const VERSION = '0.6.0';
     const CONFIG = '/etc/webuzo-clean-nginx/bridge.json';
     const STATE = '/var/lib/webuzo-clean-nginx/state';
     const ACTION = 'webuzo-clean-nginx-bridge';
+
+    /** Shared account cooldown, independent of which site signed the request. */
+    public static function backoff(array $state, $operation, $now) {
+        return max(0, 2 - ($now - $state['last_request']), $operation === 'purge' ? 10 - ($now - $state['last_purge']) : 0);
+    }
 
     private static function native_generation($account) {
         $webuzo = posix_getpwnam('webuzo');
@@ -132,6 +138,8 @@ final class WCN_Native_Bridge {
             list($r, $entry) = self::authenticate($raw, $_SERVER['HTTP_X_WCN_SIGNATURE'] ?? '', $config['keys'], time());
             $key = $entry['key'];
             $answer += ['nonce' => $r['nonce'], 'account' => $entry['account'], 'scope' => 'account', 'op' => $r['op'], 'backend' => 'webuzo-native'];
+            // Additive v1 metadata: older clients ignore it; no new caller-selectable target.
+            $answer += ['connector_version' => self::VERSION, 'capabilities' => ['status', 'purge', 'retry_after'], 'purge_interval' => 10];
             $identity = posix_getpwuid($entry['uid']);
             if (!$identity || $identity['name'] !== $entry['account'] || $identity['gid'] !== $entry['gid'] ||
                 !hash_equals($entry['generation'], self::native_generation($entry['account']))) {
@@ -149,7 +157,9 @@ final class WCN_Native_Bridge {
             $now = time();
             $state['nonces'] = array_filter($state['nonces'], function ($ts) use ($now) { return is_int($ts) && $ts >= $now - 65; });
             if (isset($state['nonces'][$r['nonce']])) { throw new RuntimeException('replayed'); }
-            if ($now - $state['last_request'] < 2 || ($r['op'] === 'purge' && $now - $state['last_purge'] < 10)) {
+            $backoff = self::backoff($state, $r['op'], $now);
+            if ($backoff > 0) {
+                $answer['retry_after'] = $backoff;
                 throw new RuntimeException('rate_limited');
             }
             $state['nonces'][$r['nonce']] = $now;
@@ -178,6 +188,7 @@ final class WCN_Native_Bridge {
         } catch (Throwable $e) {
             $allowed = ['not_allowed', 'bad_request', 'expired', 'identity_changed', 'busy', 'replayed', 'rate_limited', 'cache_unavailable', 'native_failed'];
             $answer['code'] = in_array($e->getMessage(), $allowed, true) ? $e->getMessage() : 'unavailable';
+            if ($answer['code'] === 'busy') { $answer['retry_after'] = 10; }
             if ($answer['code'] === 'unavailable' || $answer['code'] === 'native_failed') { error_log('Webuzo Clean Nginx: ' . $answer['code']); }
         } finally {
             if (is_resource($slot)) { fclose($slot); }

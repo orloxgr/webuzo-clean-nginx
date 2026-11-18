@@ -45,8 +45,8 @@ The PHP process must run under its account UID and be able to read its provision
 
 1. Deactivate the WordPress development copy first. Remove that WordPress plugin through its Plugins screen if replacing a differently named folder.
 2. In Webuzo Admin > Plugins, **deactivate the old Webuzo plugin before deleting its uploaded bundle**. This allows its existing removal hook to run. For the old service-based candidate, deactivation stops/disables `webuzo-cache-purge.service` and removes its known installed service/code/registry files. For the native bridge candidate, deactivation removes its enrollment cron and revokes its account credentials.
-3. Upload `webuzo-clean-nginx-0.5.9.zip`, activate it, and check Clean Nginx Cache for `ready`, eligible account count and the ten-minute enrollment schedule.
-4. Install and activate `clear-nginx-for-webuzo-1.0.0.zip` in WordPress. Reload the dashboard to get forms using the new action/nonce identifiers, then test connection and clear cache.
+3. Upload `webuzo-clean-nginx-0.6.0.zip`, activate it, and check Clean Nginx Cache for `ready`, eligible account count and the ten-minute enrollment schedule.
+4. Install and activate `clear-nginx-for-webuzo-1.1.0.zip` in WordPress. Reload the dashboard to get forms using the new action/nonce identifiers, then test connection and clear cache.
 
 If the separate old purge service was installed without a Webuzo plugin, or its known unit remains, activating the new Webuzo plugin also checks for `/etc/systemd/system/webuzo-cache-purge.service`. When present, it validates the three known old installed files as trusted root-owned regular files, runs `systemctl disable --now webuzo-cache-purge.service`, removes only `/usr/local/lib/webuzo-cache-purge/webuzo_cache_purge.py`, `/etc/webuzo-cache-purge/accounts.json` and that unit file when present, then runs `systemctl daemon-reload`. Unsafe files stop installation rather than broadening cleanup. It does not search for or remove arbitrary services, websites or cache contents. Other old empty directories/logs/socket leftovers are not recursively deleted.
 
@@ -54,10 +54,46 @@ These are administrator/root lifecycle operations. All paths created by the new 
 
 ## Refresh, upgrade and remove
 
-Adding accounts or enabling cache requires no plugin reactivation: the next successful cron reconciles enrollment. Deactivate/reactivate only when intentionally rotating all credentials or installing an upgrade. Deactivation first removes its own cron under the lifecycle lock, then revokes the registry and removes client credentials and account nonce files. Reactivation generates fresh keys, automatically read by WordPress. Runtime checks also compare Webuzo's UUID/creation metadata so old credentials fail after account recreation, even if the UID/name/GID are reused.
+Adding accounts or enabling cache requires no plugin reactivation: the next successful cron reconciles enrollment. Deactivate/reactivate when intentionally rotating all credentials or replacing an incompatible development installation. Deactivation first removes its own cron under the lifecycle lock, then revokes the registry and removes client credentials and account nonce files. Reactivation generates fresh keys, automatically read by WordPress. Runtime checks also compare Webuzo's UUID/creation metadata so old credentials fail after account recreation, even if the UID/name/GID are reused.
 
-For an upgrade: deactivate, upload the reviewed replacement ZIP and activate. Confirm both the native status page and actual WordPress behavior. Revalidate after Webuzo upgrades because the native CLI and plugin loading sequence are external dependencies.
+For the compatible 0.5.9 to 0.6.0 upgrade, follow the instructions below and retain activation and credentials. Confirm both the native status page and actual WordPress behavior. Revalidate after Webuzo upgrades because the native CLI and plugin loading sequence are external dependencies.
 
 Deactivation never clears cache or removes websites. Own empty directories, the lifecycle lock, two slot files, private refresh log, disabled status and uploaded bundle remain. The disabled plugin no longer handles bridge requests. Remove only these exact plugin-owned leftovers if needed.
 
 A previously queued refresh checks that both the registry and the plugin's cron still exist while holding the lifecycle lock. It exits without recreating a disabled installation. Stale identities fail closed while waiting for synchronization.
+# Upgrading to WordPress 1.1.0 / connector 0.6.0
+
+Back up the installed plugin folders and the WordPress database. Upload the
+connector ZIP through Webuzo Admin > Plugins, then update the WordPress plugin
+from its ZIP. The connector update preserves enrollment, account signing keys,
+replay state, the native clear command and the ten-minute enrollment schedule.
+Do not deactivate/reactivate the connector just to update its code: that rotates
+credentials and is unnecessary for this release.
+
+The change is additive within protocol v1. WordPress 1.1.0 works with connector
+0.5.9 (using a conservative 10-second retry fallback); WordPress 1.0.0 works
+with connector 0.6.0. No general API key, domain selection or credential migration
+is introduced, and there is no silent change to account-wide scope.
+
+After updating, use **Test connection**, then review Preferences. Automatic
+purging is disabled by default. Enable it explicitly; enable public-comment
+purges separately if desired. Hide or rename the toolbar control as needed.
+Tools > Site Health > Info shows saved, timestamped diagnostics and does not
+issue a purge or continuously poll the connector.
+
+Automatic events are persisted before shutdown and grouped into one attempt.
+Concurrent newer changes survive completion of older work. The connector owns
+the shared account cooldown; WordPress retains explicitly rejected temporary
+work and retries it using WP-Cron, at most four retries after the initial attempt.
+Ensure WP-Cron can run (or configure the provider's normal system-cron invocation
+of WordPress cron). Future visits can also pick up due work at shutdown. A site
+with no visits and no functioning cron cannot execute a deferred clear.
+
+Transport timeouts, invalid signatures, native-command failures and other
+unconfirmed or permanent failures are reported without automatic retries.
+Check the connection and panel before retrying manually. Automatic failures
+remain visible to administrators until a later automatic result replaces them
+or automation is disabled.
+
+The WordPress deactivation hook removes its pending work and scheduled retry
+without clearing account cache. Saved preferences are retained for reactivation.

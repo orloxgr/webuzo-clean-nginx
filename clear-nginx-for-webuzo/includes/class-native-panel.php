@@ -130,7 +130,14 @@ final class Native_Panel {
 				'cache_unavailable' => __( 'Account Nginx caching or reverse proxy is disabled, or its cache directory is missing or unsafe.', 'clear-nginx-for-webuzo' ),
 				'replayed'          => __( 'The panel rejected a repeated request. Try again with a fresh request.', 'clear-nginx-for-webuzo' ),
 			);
-			return new \WP_Error( 'clear_nginx_for_webuzo_native_rejected', $messages[ $data['code'] ?? '' ] ?? __( 'The native panel rejected the cache request.', 'clear-nginx-for-webuzo' ) );
+			return new \WP_Error(
+				'clear_nginx_for_webuzo_native_rejected',
+				$messages[ $data['code'] ?? '' ] ?? __( 'The native panel rejected the cache request.', 'clear-nginx-for-webuzo' ),
+				array(
+					'native_code' => is_string( $data['code'] ?? null ) ? $data['code'] : 'unknown',
+					'retry_after' => isset( $data['retry_after'] ) && is_int( $data['retry_after'] ) ? max( 1, min( 60, $data['retry_after'] ) ) : 10,
+				)
+			);
 		}
 		return $data;
 	}

@@ -49,4 +49,9 @@ check(reject(function () use ($request) { auth($request); }, 'bad_registry'), 'M
 $keys[$id]['account'] = $original;
 $keys[$id]['uid'] = 0;
 check(reject(function () use ($request) { auth($request); }, 'bad_registry'), 'Root registry identity rejected');
+$state = ['last_request' => 1000, 'last_purge' => 1000];
+check(WCN_Native_Bridge::backoff($state, 'purge', 1000) === 10, 'All sites sharing an account receive the same ten-second purge cooldown');
+check(WCN_Native_Bridge::backoff($state, 'status', 1000) === 2, 'Read-only status uses only the two-second request cooldown');
+check(WCN_Native_Bridge::backoff($state, 'purge', 1009) === 1, 'Purge boundary reports exact remaining second');
+check(WCN_Native_Bridge::backoff($state, 'purge', 1010) === 0, 'Purge allowed exactly at ten-second boundary');
 echo json_encode(['passed' => count($checks), 'checks' => $checks], JSON_PRETTY_PRINT) . "\n";

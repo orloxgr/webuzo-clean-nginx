@@ -2,22 +2,23 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Clear Nginx for Webuzo 1.0.0\n"
-"Report-Msgid-Bugs-To: https://github.com/orloxgr/webuzo-clean-nginx/issues\n"
+"Project-Id-Version: Clear Nginx for Webuzo 1.1.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/clear-nginx-for-webuzo\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-05T13:10:06+00:00\n"
+"POT-Creation-Date: 2026-11-18T16:46:50+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: clear-nginx-for-webuzo\n"
 
 #. Plugin Name of the plugin
 #: clear-nginx-for-webuzo.php
-#: includes/class-plugin.php:51
-#: includes/class-plugin.php:115
+#: includes/class-plugin.php:56
+#: includes/class-plugin.php:152
+#: includes/class-site-health.php:70
 msgid "Clear Nginx for Webuzo"
 msgstr ""
 
@@ -28,7 +29,7 @@ msgstr ""
 
 #. Description of the plugin
 #: clear-nginx-for-webuzo.php
-msgid "Clear your hosting account's Nginx cache from the WordPress dashboard or toolbar."
+msgid "Clear your hosting account's Nginx cache manually or automatically after public site changes."
 msgstr ""
 
 #. Author of the plugin
@@ -38,6 +39,55 @@ msgstr ""
 
 #: clear-nginx-for-webuzo.php:27
 msgid "Only one copy of Clear Nginx for Webuzo may be active. Deactivate the duplicate installation before continuing."
+msgstr ""
+
+#: includes/class-auto-purge.php:251
+msgid "Automatic cache clearing could not be scheduled. Check WP-Cron; the change remains pending."
+msgstr ""
+
+#: includes/class-auto-purge.php:300
+msgid "Automatic account cache clear completed."
+msgstr ""
+
+#: includes/class-cache-service.php:25
+#: includes/class-native-panel.php:64
+msgid "Unsupported native panel operation."
+msgstr ""
+
+#: includes/class-cache-service.php:31
+msgid "The cache request could not be confirmed. Check the connection before retrying."
+msgstr ""
+
+#: includes/class-cache-service.php:42
+msgid "Connection confirmed."
+msgstr ""
+
+#: includes/class-cache-service.php:42
+msgid "Account cache cleared."
+msgstr ""
+
+#: includes/class-cli.php:20
+msgid "Use a single-site installation and --user with a WordPress administrator."
+msgstr ""
+
+#: includes/class-cli.php:37
+msgid "Nginx cache cleared for all websites in this hosting account."
+msgstr ""
+
+#: includes/class-cli.php:58
+msgid "Connection confirmed; no cache was cleared."
+msgstr ""
+
+#: includes/class-cli.php:88
+msgid "Unknown setting. Use webuzo-cache settings to list supported names."
+msgstr ""
+
+#: includes/class-cli.php:97
+msgid "Boolean settings accept true, false, 1 or 0."
+msgstr ""
+
+#: includes/class-cli.php:103
+msgid "Setting saved."
 msgstr ""
 
 #: includes/class-native-panel.php:24
@@ -54,10 +104,6 @@ msgstr ""
 
 #: includes/class-native-panel.php:51
 msgid "The native panel credential is unavailable or invalid. Wait for the next enrollment sync (every 10 minutes); if it persists, ask the hosting administrator to check account eligibility."
-msgstr ""
-
-#: includes/class-native-panel.php:64
-msgid "Unsupported native panel operation."
 msgstr ""
 
 #: includes/class-native-panel.php:103
@@ -77,7 +123,7 @@ msgid "The native panel did not confirm this request and its account scope."
 msgstr ""
 
 #: includes/class-native-panel.php:126
-#: includes/class-plugin.php:129
+#: includes/class-plugin.php:166
 msgid "Wait 2 seconds between connection checks and 10 seconds between cache clears."
 msgstr ""
 
@@ -101,79 +147,199 @@ msgstr ""
 msgid "The panel rejected a repeated request. Try again with a fresh request."
 msgstr ""
 
-#: includes/class-native-panel.php:133
+#: includes/class-native-panel.php:135
 msgid "The native panel rejected the cache request."
 msgstr ""
 
-#: includes/class-plugin.php:68
-msgid "Clears Nginx cache for all websites in this hosting account."
-msgstr ""
-
 #: includes/class-plugin.php:69
+#: includes/class-plugin.php:179
 msgid "Clear Cache"
 msgstr ""
 
-#: includes/class-plugin.php:80
+#: includes/class-plugin.php:75
+msgid "Clears Nginx cache for all websites in this hosting account."
+msgstr ""
+
+#: includes/class-plugin.php:87
+#: includes/class-plugin.php:142
 msgid "Settings"
 msgstr ""
 
 #: includes/class-plugin.php:117
-msgid "This release supports single-site WordPress only."
-msgstr ""
-
-#: includes/class-plugin.php:121
-msgid "Clear cached pages to help visitors see your latest changes."
-msgstr ""
-
-#: includes/class-plugin.php:122
-msgid "This plugin clears the Nginx cache for all websites in this hosting account."
-msgstr ""
-
-#: includes/class-plugin.php:123
-msgid "Check connection"
-msgstr ""
-
-#: includes/class-plugin.php:123
-msgid "Checks which hosting account will be used. This action does not clear cache."
-msgstr ""
-
-#: includes/class-plugin.php:125
-msgid "Test connection"
-msgstr ""
-
-#: includes/class-plugin.php:126
-msgid "Clear account cache"
-msgstr ""
-
-#: includes/class-plugin.php:128
-msgid "Clear Nginx cache for this account"
-msgstr ""
-
-#: includes/class-plugin.php:136
-msgid "You cannot manage this site’s cache."
-msgstr ""
-
-#: includes/class-plugin.php:140
-#: includes/class-plugin.php:149
-msgid "Use the cache management form."
-msgstr ""
-
-#: includes/class-plugin.php:145
-msgid "Unknown operation."
+msgid "Automatic cache clear:"
 msgstr ""
 
 #: includes/class-plugin.php:154
+msgid "This release supports single-site WordPress only."
+msgstr ""
+
+#: includes/class-plugin.php:158
+msgid "Clear cached pages to help visitors see your latest changes."
+msgstr ""
+
+#: includes/class-plugin.php:159
+msgid "This plugin clears the Nginx cache for all websites in this hosting account."
+msgstr ""
+
+#: includes/class-plugin.php:160
+msgid "Check connection"
+msgstr ""
+
+#: includes/class-plugin.php:160
+msgid "Checks which hosting account will be used. This action does not clear cache."
+msgstr ""
+
+#: includes/class-plugin.php:162
+msgid "Test connection"
+msgstr ""
+
+#: includes/class-plugin.php:163
+msgid "Clear account cache"
+msgstr ""
+
+#: includes/class-plugin.php:165
+msgid "Clear Nginx cache for this account"
+msgstr ""
+
+#: includes/class-plugin.php:168
+msgid "Preferences"
+msgstr ""
+
+#: includes/class-plugin.php:171
+msgid "Automatically clear account cache after public site changes"
+msgstr ""
+
+#: includes/class-plugin.php:172
+msgid "Also clear cache when public comments change"
+msgstr ""
+
+#: includes/class-plugin.php:173
+msgid "Show the Clear Cache button in the toolbar"
+msgstr ""
+
+#: includes/class-plugin.php:178
+msgid "Automatic clears affect every website in this hosting account. Comment clearing requires automatic clearing to be enabled. Deferred clears require working WP-Cron."
+msgstr ""
+
+#: includes/class-plugin.php:179
+msgid "Toolbar button text"
+msgstr ""
+
+#: includes/class-plugin.php:180
+msgid "Save preferences"
+msgstr ""
+
+#: includes/class-plugin.php:188
+msgid "You cannot manage this site’s cache."
+msgstr ""
+
+#: includes/class-plugin.php:192
+#: includes/class-plugin.php:201
+msgid "Use the cache management form."
+msgstr ""
+
+#: includes/class-plugin.php:197
+msgid "Unknown operation."
+msgstr ""
+
+#: includes/class-plugin.php:206
 msgid "Multisite is not supported by this release."
 msgstr ""
 
 #. translators: %s: Hosting account username confirmed by the native bridge.
-#: includes/class-plugin.php:166
+#: includes/class-plugin.php:217
 #, php-format
 msgid "Connected to the native Webuzo bridge for hosting account %s. Connection test only; no cache was cleared."
 msgstr ""
 
 #. translators: %s: Hosting account username confirmed by the native bridge.
-#: includes/class-plugin.php:172
+#: includes/class-plugin.php:223
 #, php-format
 msgid "The native Webuzo cache-clear command completed for hosting account %s. This affects every site in that account. New visits rebuild cache."
+msgstr ""
+
+#: includes/class-site-health.php:29
+msgid "Version"
+msgstr ""
+
+#: includes/class-site-health.php:33
+msgid "Cache scope"
+msgstr ""
+
+#: includes/class-site-health.php:34
+msgid "All websites in this hosting account"
+msgstr ""
+
+#: includes/class-site-health.php:37
+msgid "Automatic purge"
+msgstr ""
+
+#: includes/class-site-health.php:38
+#: includes/class-site-health.php:42
+msgid "Enabled"
+msgstr ""
+
+#: includes/class-site-health.php:38
+#: includes/class-site-health.php:42
+msgid "Disabled"
+msgstr ""
+
+#: includes/class-site-health.php:41
+msgid "Purge on comment changes"
+msgstr ""
+
+#: includes/class-site-health.php:45
+msgid "Pending automatic clear"
+msgstr ""
+
+#: includes/class-site-health.php:46
+msgid "Yes; requires working WP-Cron"
+msgstr ""
+
+#: includes/class-site-health.php:46
+msgid "No"
+msgstr ""
+
+#: includes/class-site-health.php:49
+msgid "Last saved connection or clear result"
+msgstr ""
+
+#: includes/class-site-health.php:50
+msgid "Not checked. Use Test connection in the plugin settings."
+msgstr ""
+
+#: includes/class-site-health.php:53
+msgid "Result time (UTC)"
+msgstr ""
+
+#: includes/class-site-health.php:54
+msgid "Never"
+msgstr ""
+
+#: includes/class-site-health.php:57
+msgid "Installation support"
+msgstr ""
+
+#: includes/class-site-health.php:58
+msgid "Multisite is unsupported"
+msgstr ""
+
+#: includes/class-site-health.php:58
+msgid "Single site"
+msgstr ""
+
+#: includes/class-site-health.php:62
+msgid "Connector version from last successful request"
+msgstr ""
+
+#: includes/class-site-health.php:63
+msgid "Not reported by the connector"
+msgstr ""
+
+#: includes/class-site-health.php:66
+msgid "Last automatic clear result"
+msgstr ""
+
+#: includes/class-site-health.php:67
+msgid "No automatic clear recorded"
 msgstr ""

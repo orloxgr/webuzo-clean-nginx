@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /** WordPress administrator UI and authorized manual actions. */
 final class Plugin {
 
-	const VERSION = '1.0.0';
+	const VERSION = '1.1.0';
 	const SLUG    = 'clear-nginx-for-webuzo';
 
 	/**
@@ -33,6 +33,11 @@ final class Plugin {
 		self::$plugin_file = $plugin_file;
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
 		add_action( 'admin_notices', array( __CLASS__, 'notices' ) );
+		add_action( 'wp_footer', array( __CLASS__, 'frontend_notice' ) );
+		add_action( 'admin_init', array( Settings::class, 'register' ) );
+		add_action( 'update_option_' . Settings::OPTION, array( Settings::class, 'changed' ), 10, 2 );
+		add_filter( 'debug_information', array( Site_Health::class, 'information' ) );
+		add_filter( 'plugin_action_links_' . plugin_basename( $plugin_file ), array( __CLASS__, 'settings_link' ) );
 		add_action( 'admin_bar_menu', array( __CLASS__, 'bar' ), 100 );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'styles' ) );
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'styles' ) );
@@ -57,16 +62,18 @@ final class Plugin {
 	 * @param \WP_Admin_Bar $bar WordPress toolbar.
 	 */
 	public static function bar( $bar ) {
-		if ( ! current_user_can( 'manage_options' ) || is_multisite() ) {
+		if ( ! current_user_can( 'manage_options' ) || is_multisite() || ! Settings::get()['show_toolbar'] ) {
 			return;
 		}
-		$form = '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="clear-nginx-cache-form">'
+		$settings = Settings::get();
+		$label    = '' !== $settings['toolbar_label'] ? $settings['toolbar_label'] : __( 'Clear Cache', 'clear-nginx-for-webuzo' );
+		$form     = '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="clear-nginx-cache-form">'
 			. '<input type="hidden" name="action" value="clear_nginx_for_webuzo">'
 			. '<input type="hidden" name="operation" value="purge">'
 			. '<input type="hidden" name="_wpnonce" value="' . esc_attr( wp_create_nonce( 'clear_nginx_for_webuzo_purge' ) ) . '">'
 			. wp_referer_field( false )
 			. '<button type="submit" class="clear-nginx-cache-button" title="' . esc_attr__( 'Clears Nginx cache for all websites in this hosting account.', 'clear-nginx-for-webuzo' ) . '">'
-			. esc_html__( 'Clear Cache', 'clear-nginx-for-webuzo' ) . '</button></form>';
+			. esc_html( $label ) . '</button></form>';
 		$bar->add_node(
 			array(
 				'id'    => self::SLUG,
@@ -105,6 +112,36 @@ final class Plugin {
 			$type = in_array( $notice['type'], array( 'success', 'error', 'warning' ), true ) ? $notice['type'] : 'error';
 			echo '<div class="notice notice-' . esc_attr( $type ) . '"><p>' . esc_html( $notice['text'] ) . '</p></div>';
 		}
+		$automatic = get_option( 'clear_nginx_for_webuzo_auto_result', array() );
+		if ( isset( $automatic['ok'], $automatic['message'] ) && ! $automatic['ok'] && Settings::get()['automatic_purge'] ) {
+			echo '<div class="notice notice-error"><p>' . esc_html__( 'Automatic cache clear:', 'clear-nginx-for-webuzo' ) . ' ' . esc_html( $automatic['message'] ) . '</p></div>';
+		}
+	}
+
+	/** Show an escaped result on the frontend only to its administrator. */
+	public static function frontend_notice() {
+		if ( ! current_user_can( 'manage_options' ) || is_multisite() ) {
+			return;
+		}
+		$key    = 'clear_nginx_for_webuzo_notice_' . get_current_user_id();
+		$notice = get_transient( $key );
+		if ( is_array( $notice ) && isset( $notice['text'] ) ) {
+			delete_transient( $key );
+			echo '<div class="clear-nginx-cache-result" role="status"><p>' . esc_html( $notice['text'] ) . '</p></div>';
+		}
+	}
+
+	/**
+	 * Link directly to the tools page from the installed plugins list.
+	 *
+	 * @param array $links Existing action links.
+	 * @return array
+	 */
+	public static function settings_link( $links ) {
+		if ( current_user_can( 'manage_options' ) && ! is_multisite() ) {
+			$links[] = '<a href="' . esc_url( admin_url( 'tools.php?page=' . self::SLUG ) ) . '">' . esc_html__( 'Settings', 'clear-nginx-for-webuzo' ) . '</a>';
+		}
+		return $links;
 	}
 
 	/** Render the account cache tools page. */
@@ -127,6 +164,21 @@ final class Plugin {
 		self::start_form( 'purge' );
 		submit_button( __( 'Clear Nginx cache for this account', 'clear-nginx-for-webuzo' ), 'primary' );
 		echo '</form><p>' . esc_html__( 'Wait 2 seconds between connection checks and 10 seconds between cache clears.', 'clear-nginx-for-webuzo' ) . '</p>';
+		$settings = Settings::get();
+		echo '<h2>' . esc_html__( 'Preferences', 'clear-nginx-for-webuzo' ) . '</h2><form method="post" action="' . esc_url( admin_url( 'options.php' ) ) . '">';
+		settings_fields( Settings::OPTION );
+		$labels = array(
+			'automatic_purge' => __( 'Automatically clear account cache after public site changes', 'clear-nginx-for-webuzo' ),
+			'purge_comments'  => __( 'Also clear cache when public comments change', 'clear-nginx-for-webuzo' ),
+			'show_toolbar'    => __( 'Show the Clear Cache button in the toolbar', 'clear-nginx-for-webuzo' ),
+		);
+		foreach ( $labels as $key => $label ) {
+			echo '<p><label><input type="checkbox" name="' . esc_attr( Settings::OPTION . '[' . $key . ']' ) . '" value="1" ' . checked( $settings[ $key ], true, false ) . '> ' . esc_html( $label ) . '</label></p>';
+		}
+		echo '<p>' . esc_html__( 'Automatic clears affect every website in this hosting account. Comment clearing requires automatic clearing to be enabled. Deferred clears require working WP-Cron.', 'clear-nginx-for-webuzo' ) . '</p>';
+		echo '<p><label for="clear-nginx-toolbar-label">' . esc_html__( 'Toolbar button text', 'clear-nginx-for-webuzo' ) . '</label><br><input id="clear-nginx-toolbar-label" type="text" maxlength="80" name="' . esc_attr( Settings::OPTION . '[toolbar_label]' ) . '" value="' . esc_attr( $settings['toolbar_label'] ) . '" placeholder="' . esc_attr__( 'Clear Cache', 'clear-nginx-for-webuzo' ) . '"></p>';
+		submit_button( __( 'Save preferences', 'clear-nginx-for-webuzo' ) );
+		echo '</form>';
 		echo '</div>';
 	}
 
@@ -153,8 +205,7 @@ final class Plugin {
 			if ( is_multisite() ) {
 				$result = new \WP_Error( 'clear_nginx_for_webuzo_multisite_unsupported', __( 'Multisite is not supported by this release.', 'clear-nginx-for-webuzo' ) );
 			} else {
-				$client = new Native_Panel();
-				$result = 'connection' === $operation ? $client->check_connection() : $client->purge();
+				$result = Cache_Service::run( 'connection' === $operation ? 'status' : 'purge' );
 			}
 			if ( is_wp_error( $result ) ) {
 				$text = $result->get_error_message();

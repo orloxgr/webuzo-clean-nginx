@@ -12,6 +12,12 @@ PLUGIN = (
     'clear-nginx-for-webuzo/readme.txt',
     'clear-nginx-for-webuzo/includes/class-native-panel.php',
     'clear-nginx-for-webuzo/includes/class-plugin.php',
+    'clear-nginx-for-webuzo/includes/class-settings.php',
+    'clear-nginx-for-webuzo/includes/class-state.php',
+    'clear-nginx-for-webuzo/includes/class-cache-service.php',
+    'clear-nginx-for-webuzo/includes/class-auto-purge.php',
+    'clear-nginx-for-webuzo/includes/class-site-health.php',
+    'clear-nginx-for-webuzo/includes/class-cli.php',
     'clear-nginx-for-webuzo/assets/admin-bar.css',
     'clear-nginx-for-webuzo/languages/clear-nginx-for-webuzo.pot',
 )
@@ -65,7 +71,8 @@ def main():
     for name in ('lifecycle.py',):
         native_sources['webuzo-clean-nginx/service/' + name] = 'server/' + name
     native_sources['webuzo-clean-nginx/LICENSE'] = 'LICENSE'
-    for name in ('README.md', 'docs/INSTALLATION.md', 'docs/SECURITY-REVIEW.md', 'docs/WORDPRESS-QUALITY.md'):
+    for name in ('README.md', 'docs/INSTALLATION.md', 'docs/SECURITY-REVIEW.md', 'docs/WORDPRESS-QUALITY.md',
+                 'docs/HESTIA-PARITY.md', 'docs/VERIFICATION-1.1.0.md'):
         native_sources['webuzo-clean-nginx/' + name] = name
     if selected in ('webuzo', 'all'):
         package(native, native_sources, 'webuzo-clean-nginx/SHA256SUMS.txt')

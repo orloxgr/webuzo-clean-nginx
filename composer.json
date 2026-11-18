@@ -16,7 +16,9 @@
         "lint": "phpcs --standard=phpcs.xml.dist",
         "test:wordpress": [
             "@php tests/wordpress-contract.php",
-            "@php tests/native-client-contract.php"
-        ]
+            "@php tests/native-client-contract.php",
+            "@php tests/cli-contract.php"
+        ],
+        "test:protocol": "@php tests/native-bridge-contract.php"
     }
 }

@@ -7,6 +7,13 @@ namespace {
 define('ABSPATH', __DIR__);
 $authorized = true; $multisite = false; $validNonce = true; $notice = null; $checks = []; $transients = [];
 function add_action($hook, ...$args) { $GLOBALS['hooks'][$hook] = $args; }
+function add_filter($hook, ...$args) { $GLOBALS['filters'][$hook] = $args; }
+function plugin_basename($file) { return 'clear-nginx-for-webuzo/clear-nginx-for-webuzo.php'; }
+function register_deactivation_hook(...$args) {}
+function get_option($key, $default = false) { return $GLOBALS['options'][$key] ?? $default; }
+function update_option($key, $value, $autoload = null) { $GLOBALS['options'][$key] = $value; return true; }
+function settings_fields($group) { echo '<input type="hidden" name="option_page" value="' . esc_attr($group) . '">'; }
+function checked($value, $expected, $echo = true) { return $value === $expected ? 'checked="checked"' : ''; }
     class WP_Error {
         private $code;
         private $message;
@@ -19,6 +26,7 @@ function __($text, $domain = '') { return $GLOBALS['translations'][$text] ?? $te
 function esc_html__($text, $domain = '') { return esc_html($text); }
 function esc_attr__($text, $domain = '') { return esc_attr($text); }
 function sanitize_text_field($value) { return strip_tags($value); }
+function wp_html_excerpt($value, $length, $more = '') { return mb_substr($value, 0, $length); }
 function is_admin_bar_showing() { return $GLOBALS['toolbar_visible'] ?? true; }
 function plugins_url($path, $file) { return 'https://www.example.test/wp-content/plugins/clear-nginx-for-webuzo/' . $path; }
 function wp_enqueue_style(...$args) { $GLOBALS['styles'][] = $args; }
@@ -115,7 +123,7 @@ check($toolbar_nonce_action === 'clear_nginx_for_webuzo_purge' && strpos($node['
 $styles = []; $toolbar_visible = true;
 \ClearNginxForWebuzo\Plugin::styles();
 check(count($styles) === 1 && $styles[0][1] === 'https://www.example.test/wp-content/plugins/clear-nginx-for-webuzo/assets/admin-bar.css', 'Styles use the main plugin path');
-check($styles[0][2] === ['admin-bar'] && $styles[0][3] === '1.0.0', 'Toolbar styles declare dependency and cache version');
+check($styles[0][2] === ['admin-bar'] && $styles[0][3] === '1.1.0', 'Toolbar styles declare dependency and cache version');
 foreach (['visitor', 'hidden', 'multisite'] as $case) {
     $styles = []; $authorized = $case !== 'visitor'; $toolbar_visible = $case !== 'hidden'; $multisite = $case === 'multisite';
     \ClearNginxForWebuzo\Plugin::styles(); check($styles === [], 'No unnecessary styles: ' . $case);

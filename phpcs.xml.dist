@@ -1,9 +1,7 @@
 <?xml version="1.0"?>
 <ruleset name="Clear Nginx for Webuzo">
     <description>WordPress standards for the companion WordPress plugin.</description>
-    <file>clear-nginx-for-webuzo/clear-nginx-for-webuzo.php</file>
-    <file>clear-nginx-for-webuzo/includes/class-plugin.php</file>
-    <file>clear-nginx-for-webuzo/includes/class-native-panel.php</file>
+    <file>clear-nginx-for-webuzo</file>
     <arg name="extensions" value="php"/>
     <config name="minimum_supported_wp_version" value="6.0"/>
     <config name="testVersion" value="7.4-"/>

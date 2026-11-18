@@ -16,7 +16,9 @@ namespace {
     class WP_Error {
         private $code;
         private $message;
-        public function __construct($code = '', $message = '') { $this->code = $code; $this->message = $message; }
+        private $data;
+        public function __construct($code = '', $message = '', $data = null) { $this->code = $code; $this->message = $message; $this->data = $data; }
+        public function get_error_data() { return $this->data; }
         public function get_error_code() { return $this->code; }
         public function get_error_message() { return $this->message; }
     }
@@ -43,6 +45,8 @@ namespace {
         if ($GLOBALS['scenario'] === 'account') { $data['account'] = '../another'; }
         if ($GLOBALS['scenario'] === 'failed') { $data['ok'] = false; $data['code'] = 'native_failed'; }
         if ($GLOBALS['scenario'] === 'rate') { $data['ok'] = false; $data['code'] = 'rate_limited'; }
+        if ($GLOBALS['scenario'] === 'busy') { $data['ok'] = false; $data['code'] = 'busy'; $data['retry_after'] = 7; }
+        if ($GLOBALS['scenario'] === 'new-connector') { $data['connector_version'] = '0.6.0'; $data['capabilities'] = ['status', 'purge', 'retry_after']; }
         if ($GLOBALS['scenario'] === 'confirmation') { $data['code'] = 'unconfirmed'; }
         $raw = json_encode($data, JSON_UNESCAPED_SLASHES);
         $sig = hash_hmac('sha256', "WCN-RESPONSE\n" . $raw, hex2bin($GLOBALS['credential']['key']));
@@ -77,6 +81,12 @@ namespace {
     check(hash_equals(hash_hmac('sha256', "WCN-REQUEST\n" . $args['body'], hex2bin($credential['key'])), $args['headers']['X-WCN-Signature']), 'Exact request bytes signed');
     check(strpos($args['body'], $credential['key']) === false, 'Signing secret never transmitted');
     check($client->purge()['code'] === 'native_completed', 'Authenticated native completion accepted');
+    $scenario = 'rate'; $error = $client->purge();
+    check($error->get_error_data() === ['native_code' => 'rate_limited', 'retry_after' => 10], 'Older connector rejection supplies safe retry fallback');
+    $scenario = 'busy'; $error = $client->purge();
+    check($error->get_error_data() === ['native_code' => 'busy', 'retry_after' => 7], 'Signed connector backoff survives as structured error data');
+    $scenario = 'new-connector';
+    check($client->check_connection()['connector_version'] === '0.6.0', 'New additive signed capabilities accepted with unchanged v1 requests');
     foreach (['signature' => 'signature', 'nonce' => 'confirm', 'scope' => 'scope', 'operation' => 'confirm', 'account' => 'scope', 'failed' => 'did not complete',
         'rate' => 'Wait 2', 'confirmation' => 'rejected', 'duplicate' => 'complete', 'duplicate-signature' => 'complete', 'missing-length' => 'complete',
         'truncated' => 'complete', 'oversized' => 'complete', 'redirect' => 'rejected', 'chunked' => 'complete', 'compressed' => 'complete', 'transport' => 'unknown'] as $scenario => $message) {
